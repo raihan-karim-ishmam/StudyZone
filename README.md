@@ -179,14 +179,3 @@ Current development status and next steps:
 
 This project is licensed under the MIT License - see the LICENSE file for details
 
-## 👥 Team
-
-- Project Lead: [Your Name]
-- AI Development: [Your Name]
-- Backend Development: [Team Members]
-- Frontend Development: [Team Members]
-
-## 📞 Contact
-
-Your Name - your.email@example.com
-Project Link: [https://github.com/your-username/studyzone](https://github.com/your-username/studyzone)
