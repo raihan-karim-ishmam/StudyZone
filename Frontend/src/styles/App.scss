@@ -1,0 +1,61 @@
+@use './_variables.scss' as *;  
+
+body{
+    background-color: $color-white;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    .App{
+      height: 100%;
+      width: 100%;
+    }
+    p{
+      margin-block-start: 0em;
+      margin-block-end: 0em;
+    }
+}
+  
+.flex-row{
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-column{
+  display: flex;
+  flex-direction: column;
+}
+
+.button{
+  cursor: pointer;
+}
+
+.prevent-select {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+body {
+  scrollbar-width: thin;
+  scrollbar-color: $color-primary-blue transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: $color-primary-blue;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: darken($color-primary-blue, 10%);
+}
