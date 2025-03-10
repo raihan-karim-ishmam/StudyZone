@@ -1,50 +1,42 @@
 # app.py (FastAPI Version Without Firestore)
 
-import os
 import logging
+import os
 import time
 import traceback
 from typing import Dict, Any, Optional
-
+from dotenv import load_dotenv
 import openai
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from dotenv import load_dotenv
-from azure.cosmos import CosmosClient, exceptions
 from fastapi.responses import JSONResponse
 
-# Load environment variables
-load_dotenv()
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
-# OpenAI API credentials
-openai.api_key = os.getenv("OPENAI_API_KEY")
-assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
+load_dotenv()  # Load environment variables from .env
 
-# Azure CosmosDB configuration
-COSMOSDB_URL = os.getenv("COSMOSDB_URL")
-COSMOSDB_KEY = os.getenv("COSMOSDB_KEY")
-DATABASE_NAME = "studyzone-db"
-CONTAINER_NAME = "chat_sessions"
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Get key from .env
+assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
+# assistant_id = os.environ.get('OPENAI_ASSISTANT_ID', 'asst_n8ShC4NJtlxEmkieCLILhnu5')
 
-# Initialize CosmosDB client
-cosmos_client = CosmosClient(COSMOSDB_URL, COSMOSDB_KEY)
-database = cosmos_client.get_database_client(DATABASE_NAME)
-container = database.get_container_client(CONTAINER_NAME)
-
-# Initialize FastAPI app
+# FastAPI app instance
 app = FastAPI(default_response_class=JSONResponse)
 
-# Enable CORS
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Change this to restrict to your frontend domain
     allow_credentials=True,
     allow_methods=["POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Intro message for new sessions
+# Store chat sessions in memory
+chat_sessions: Dict[str, Dict[str, Any]] = {}
+
+# Intro message
 intro_message = "Hi, how can I help you regarding Speechnet's services?"
 
 
@@ -53,12 +45,27 @@ class ChatRequest(BaseModel):
     message: Optional[str] = ""
 
 
+def load_openai_assistant():
+    """Creates a new OpenAI assistant thread."""
+    logging.info("Creating a new OpenAI thread.")
+    try:
+        thread = openai.beta.threads.create()
+        logging.info(f"New thread created: {thread.id}")
+        return thread
+    except Exception as e:
+        logging.error(f"Failed to create OpenAI thread: {e}")
+        traceback.print_exc()
+        return None
+
+
 def wait_on_run(run, thread):
+    """Polls OpenAI API until run is completed."""
     logging.info(f"Waiting on run {run.id} for thread {thread.id}")
     try:
         while run.status in ["queued", "in_progress"]:
-            time.sleep(0.5)
+            time.sleep(0.5)  # Consider using exponential backoff
             run = openai.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+
         logging.info(f"Run {run.id} completed with status {run.status}")
         return run
     except Exception as e:
@@ -67,10 +74,20 @@ def wait_on_run(run, thread):
         return None
 
 
-# Error fallback for Render Hosting
-@app.get("/")
-def home():
-    return {"message": "FastAPI backend is running successfully!"}
+def get_user_ip(request: Request) -> str:
+    """Retrieves the user's IP address."""
+    logging.info("Retrieving user IP address.")
+    try:
+        if forwarded := request.headers.get("X-Forwarded-For"):
+            ip = forwarded.split(",")[0].strip()
+        else:
+            ip = request.client.host
+        logging.info(f"User IP address determined: {ip}")
+        return ip
+    except Exception as e:
+        logging.error(f"Error retrieving user IP: {e}")
+        traceback.print_exc()
+        return "0.0.0.0"
 
 
 @app.post("/chat")
@@ -78,31 +95,40 @@ async def chat(chat_request: ChatRequest, request: Request):
     try:
         session_id = chat_request.session_id
         user_input = chat_request.message.strip()
+        ip_address = get_user_ip(request)
 
         if not session_id:
             raise HTTPException(status_code=400, detail="session_id is required")
 
-        try:
-            session_data = container.read_item(item=session_id, partition_key=session_id)
-        except exceptions.CosmosResourceNotFoundError:
-            session_data = {"id": session_id, "session_id": session_id, "history": [], "thread": None}
-            container.create_item(session_data)
+        # No Firestore retrieval, all stored in-memory
+        thread_id = None  
+        thread = None
 
-        conversation_history = session_data["history"]
+        if session_id in chat_sessions:
+            thread = chat_sessions[session_id]["thread"]
+        else:
+            thread = load_openai_assistant()
+            if thread is None:
+                raise HTTPException(status_code=500, detail="Failed to create a new conversation thread")
+
+            chat_sessions[session_id] = {"history": [], "thread": thread}
+
+            try:
+                openai.beta.threads.messages.create(thread_id=thread.id, role="assistant", content=intro_message)
+            except Exception as e:
+                logging.error(f"Error sending intro message: {e}")
+                traceback.print_exc()
+
+            chat_sessions[session_id]["history"].append({"role": "assistant", "content": intro_message})
 
         if not user_input:
-            return {"conversation": conversation_history, "completed": False}
+            return {"conversation": chat_sessions[session_id]["history"], "completed": False}
 
         assistant_response = get_assistant_response(session_id, user_input)
-
-        conversation_history.append({"role": "user", "content": user_input})
-        conversation_history.append({"role": "assistant", "content": assistant_response})
-
-        session_data["history"] = conversation_history
-        container.replace_item(item=session_id, body=session_data)
-
         return {"message": assistant_response, "completed": False}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Unhandled exception in /chat endpoint: {e}")
         traceback.print_exc()
@@ -111,25 +137,24 @@ async def chat(chat_request: ChatRequest, request: Request):
 
 def get_assistant_response(session_id: str, user_input: str) -> str:
     try:
-        message = openai.beta.threads.messages.create(
-            thread_id=session_id, role="user", content=user_input
-        )
+        thread = chat_sessions[session_id]["thread"]
+        message = openai.beta.threads.messages.create(thread_id=thread.id, role="user", content=user_input)
 
-        run = openai.beta.threads.runs.create(
-            thread_id=session_id, assistant_id=assistant_id
-        )
-
-        run = wait_on_run(run, session_id)
+        run = openai.beta.threads.runs.create(thread_id=thread.id, assistant_id=assistant_id)
+        run = wait_on_run(run, thread)
         if run is None:
             return "Sorry, something went wrong. Please try again later."
 
-        messages = openai.beta.threads.messages.list(thread_id=session_id, order="asc", after=message.id)
+        messages = openai.beta.threads.messages.list(thread_id=thread.id, order="asc", after=message.id)
         assistant_response = next(
             (msg.content[0].text.value for msg in messages.data if msg.role == "assistant"), ""
         )
 
-        return assistant_response
+        chat_sessions[session_id]["history"].extend(
+            [{"role": "user", "content": user_input}, {"role": "assistant", "content": assistant_response}]
+        )
 
+        return assistant_response
     except Exception as e:
         logging.error(f"Error in get_assistant_response: {e}")
         traceback.print_exc()
