@@ -4,3 +4,4 @@ openai
 google-cloud-firestore
 pydantic
 starlette
+python-dotenv
