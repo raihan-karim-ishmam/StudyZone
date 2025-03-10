@@ -89,6 +89,11 @@ def get_user_ip(request: Request) -> str:
         traceback.print_exc()
         return "0.0.0.0"
 
+# Error fallback for Render Hosting
+ @app.get("/")
+ def home():
+     return {"message": "FastAPI backend is running successfully!"}
+     
 
 @app.post("/chat")
 async def chat(chat_request: ChatRequest, request: Request):
