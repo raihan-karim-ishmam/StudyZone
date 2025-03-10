@@ -1,0 +1,202 @@
+@use '../../styles/variables' as *;
+
+.mantine-Textarea-input{
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.studyzone-container {
+    background-color: $color-white;
+    z-index: 1;
+    position: relative;
+    height: calc(100vh - 85px);
+    .active-chat-header {
+      padding-top: 38px;
+      padding-left: 44px;
+      padding-right: 44px;
+      padding-bottom: 38px;
+      font-size: 16px;
+      align-items: center;
+      .active-subject-container {
+        align-items: center;
+        gap: 7px;
+        .active-subject-icon {
+          height: 28px;
+          width: auto;
+        }
+      }
+      .active-chat-container {
+        font-size: 14px;
+        font-weight: 500;
+        align-items: center;
+        color: $color-gray;
+        .chevron-right {
+          height: 16px;
+          width: auto;
+          margin-left: 3px;
+          margin-right: 3px;
+        }
+      }
+    }
+    .active-chat {
+      transition: opacity 0.2s ease;
+    }
+    .active-chat:hover {
+      opacity: .6;
+      transition: opacity 0.2s ease;
+    }
+    .mantine-Drawer-content {
+      background-color: $color-white;
+    }
+    .new-chat-container{
+      height: calc(100vh - 313px);
+      align-items: center;
+      justify-content: center;
+      .new-chat-placeholder{
+        align-items: center;
+        margin-bottom: 40px;
+        .logo{
+          height: 80px;
+          width: 80px;
+          box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.16);
+          border-radius: 18px;
+        }
+        .new-chat-placeholder-title{
+          font-size: 36px;
+          font-weight: 700;
+          margin-top: 29px;
+          margin-bottom: 5px;
+        }
+        .new-chat-placeholder-description{
+          font-size: 16px;
+          color: $color-gray;
+          width: 389px;
+          text-align: center;
+        }
+        .choose-note{
+          margin-top: 52px;
+          align-items: center;
+          gap: 29px;
+          .choose-note-title{
+            font-size: 16px;
+            color: $color-primary-orange;
+          }
+          .choose-note-blocks{
+            gap: 27px;
+            .choose-note-block{
+              position: relative;
+              width: 199px;
+              height: 105px;
+              border: 1px solid #ececec;
+              border-radius: 12px;
+              justify-content: center;
+              transition: background-color 0.3s ease;
+              .note-title{
+                margin-top: 13px;
+                font-size: 13px;
+                font-weight: 500;
+                width: 163px;
+              }
+              .active-subject-icon-quick-note{
+                position: absolute;
+                bottom: 10px;
+                left: 11px;
+                height: 24px;
+                width: 24px;
+              }
+            }
+            .choose-note-block:hover{
+              background-color: #f1f0f0;
+              transition: background-color 0.3s ease;
+            }
+            .selected{
+              background-color: #f1f0f0;
+              transition: background-color 0.3s ease;
+            }
+          }
+        }
+      }
+    }
+    .typebar-container{
+      z-index: 999;
+      width: 45%;
+      min-width: 512px;
+      max-width: 838px;
+      min-height: 50px;
+      background-color: $color-white;
+      box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.11);
+      border-radius: 25px;
+      position: absolute;
+      bottom: 38px;
+      left: 50%;
+      transform: translateX(-50%);
+      align-items: flex-end;
+      justify-content: space-between;
+      .input-container{
+        padding-left: 21px;
+        align-items: flex-end;
+        gap: 11px;
+        flex: 1;
+        .typebar{
+          flex: 1;
+          border: none;
+          resize: none;
+          padding-bottom: 6px;
+          padding-top: 6px;
+        }
+        .typebar:focus{
+          outline: none;
+        }
+        .typebar::placeholder{
+          color: $color-gray;
+          font-size: 14px;
+          font-family: 'Poppins', sans-serif;
+        }
+        .typebar::-webkit-input-placeholder {
+          color: $color-gray;
+          font-size: 14px;
+          font-family: 'Poppins', sans-serif;
+        }
+        .typebar::-moz-placeholder {
+          color: $color-gray;
+          font-size: 14px;
+          font-family: 'Poppins', sans-serif;
+        }
+        .typebar:-ms-input-placeholder{
+          color: $color-gray;
+          font-size: 14px;
+          font-family: 'Poppins', sans-serif;
+        }
+        .typebar:-moz-placeholder {
+          color: $color-gray;
+          font-size: 14px;
+          font-family: 'Poppins', sans-serif;
+        }
+        .select-image{
+          transition: opacity 0.3s ease;
+          padding-bottom: 15px;
+        }
+        .select-image:hover {
+          opacity: .5;
+          transition: opacity 0.3s ease;
+        }
+      }
+      .send-button{
+        margin-right: 9px;
+        margin-left: 9px;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 100px;
+        background-color: $color-primary-blue;
+        transition: opacity 0.3s ease;
+        margin-bottom: 8px;
+      }
+      .send-button:hover {
+        opacity: .7;
+        transition: opacity 0.3s ease;
+      }
+    }
+  }
+

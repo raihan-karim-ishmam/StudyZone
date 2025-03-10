@@ -1,0 +1,110 @@
+@use '../../variables' as *;
+
+.mantine-Drawer-root {
+    .mantine-Drawer-body {
+        height: 100%;
+        background-color: $color-white;
+        border: 2px solid $color-pure-white;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .mantine-Accordion-root{
+            display: flex;
+            flex-direction: column;
+            gap: 26px;
+
+        }
+        // .mantine-Accordion {
+        //     display: flex;
+        //     flex-direction: column;
+        //     gap: 26px;
+        // }
+
+        .mantine-Accordion-item {
+            width: 293px;
+            border-bottom: none;
+        }
+
+        .mantine-Accordion-control {
+            width: 293px;
+            height: 38px;
+            border-radius: 19px;
+            background-color: $color-white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            transition: background-color 0.3s ease;
+
+            &:hover {
+                background-color: $color-background-light;
+            }
+        }
+
+        .mantine-Accordion-item[data-active="true"] .mantine-Accordion-control {
+            background-color: $color-background-light;
+        }
+
+        .mantine-Accordion-chevron {
+            border-radius: 19px;
+            background-color: $color-white;
+            transition: background-color 0.3s ease;
+            padding: 4px;
+
+            &:hover {
+                background-color: $color-background-light;
+            }
+        }
+
+        .mantine-Accordion-item[data-active="true"] .mantine-Accordion-chevron {
+            background-color: $color-background-light;
+        }
+
+        .drawer-header-container {
+            margin-left: 1px;
+            gap: 114px;
+            align-items: center;
+            padding-top: 28px;
+            padding-bottom: 19px;
+            .drawer-header{
+                gap: 10px;
+                .drawer-header-title{
+                    font-size: 18px;
+                    font-weight: 500;
+                }
+            }
+            .drawer-header-close{
+                transition: opacity 0.3s ease;
+            }
+            .drawer-header-close:hover{
+                opacity: 0.5;
+                transition: opacity 0.3s ease;
+            }
+        }
+        .spotlight-search-container{
+            width: 270px;
+            height: 38px;
+            background-color: $color-background-light;
+            border-radius: 19px;
+            color: $color-gray;
+            gap: 10px;
+            align-items: center;
+            transition: opacity 0.3s ease;
+            .spotlight-search-icon{
+                margin-left: 17px;
+            }
+        }
+        .spotlight-search-container:hover{
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        .divider{
+            margin-top: 19px;
+            margin-bottom: 19px;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(217, 217, 217, 0) 0%, #E3E5FF 50.5%, rgba(255, 255, 255, 0) 100%);
+        }
+    }
+}
