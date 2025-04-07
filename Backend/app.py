@@ -1,130 +1,90 @@
-# app.py (FastAPI Version Without Firestore)
+# app5.py - FastAPI chatbot (GPT-4o Vision)
+# Features:
+# - Uses OpenAI Assistants API
+# - Supports text + image input via file upload (not base64)
+# - Image files uploaded to OpenAI and passed using file_id
+# - Maintains thread-based session memory via session_id (in-memory)
+# - Swagger & frontend compatible
+
+# TESTED!
 
 import logging
 import os
 import time
 import traceback
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+
 from dotenv import load_dotenv
 import openai
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(message)s")
 
-load_dotenv()  # Load environment variables from .env
+# Load environment variables (API keys etc.)
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
 
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Get key from .env
-assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
-# assistant_id = os.environ.get('OPENAI_ASSISTANT_ID', 'asst_n8ShC4NJtlxEmkieCLILhnu5')
-
-# FastAPI app instance
+# Initialize FastAPI app
 app = FastAPI(default_response_class=JSONResponse)
 
-# CORS configuration
+# Enable CORS for development/testing (adjust origin in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change this to restrict to your frontend domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Store chat sessions in memory
+# In-memory chat session store: { session_id: { thread, history } }
 chat_sessions: Dict[str, Dict[str, Any]] = {}
 
-# Intro message
-intro_message = "Hi, how can I help you regarding Speechnet's services?"
-
-
-class ChatRequest(BaseModel):
-    session_id: str
-    message: Optional[str] = ""
-
-
-def load_openai_assistant():
-    """Creates a new OpenAI assistant thread."""
-    logging.info("Creating a new OpenAI thread.")
-    try:
-        thread = openai.beta.threads.create()
-        logging.info(f"New thread created: {thread.id}")
-        return thread
-    except Exception as e:
-        logging.error(f"Failed to create OpenAI thread: {e}")
-        traceback.print_exc()
-        return None
-
-
-def wait_on_run(run, thread):
-    """Polls OpenAI API until run is completed."""
-    logging.info(f"Waiting on run {run.id} for thread {thread.id}")
-    try:
-        while run.status in ["queued", "in_progress"]:
-            time.sleep(0.5)  # Consider using exponential backoff
-            run = openai.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
-
-        logging.info(f"Run {run.id} completed with status {run.status}")
-        return run
-    except Exception as e:
-        logging.error(f"Error while waiting on run: {e}")
-        traceback.print_exc()
-        return None
-
-
-def get_user_ip(request: Request) -> str:
-    """Retrieves the user's IP address."""
-    logging.info("Retrieving user IP address.")
-    try:
-        if forwarded := request.headers.get("X-Forwarded-For"):
-            ip = forwarded.split(",")[0].strip()
-        else:
-            ip = request.client.host
-        logging.info(f"User IP address determined: {ip}")
-        return ip
-    except Exception as e:
-        logging.error(f"Error retrieving user IP: {e}")
-        traceback.print_exc()
-        return "0.0.0.0"
+# Intro message shown at the start of every new thread
+intro_message = "Hi, how can I help you? You can send text or an image for analysis."
 
 
 @app.post("/chat")
-async def chat(chat_request: ChatRequest, request: Request):
+async def chat(
+    session_id: str = Form(...),                      # Session identifier for user
+    message: Optional[str] = Form(""),               # User's message (optional)
+    image: Optional[UploadFile] = File(None),         # Optional image input
+):
     try:
-        session_id = chat_request.session_id
-        user_input = chat_request.message.strip()
-        ip_address = get_user_ip(request)
-
         if not session_id:
             raise HTTPException(status_code=400, detail="session_id is required")
 
-        # No Firestore retrieval, all stored in-memory
-        thread_id = None  
-        thread = None
-
-        if session_id in chat_sessions:
-            thread = chat_sessions[session_id]["thread"]
-        else:
-            thread = load_openai_assistant()
-            if thread is None:
-                raise HTTPException(status_code=500, detail="Failed to create a new conversation thread")
-
+        # Check if session thread exists or create new
+        thread = chat_sessions.get(session_id, {}).get("thread")
+        if not thread:
+            thread = openai.beta.threads.create()
             chat_sessions[session_id] = {"history": [], "thread": thread}
 
-            try:
-                openai.beta.threads.messages.create(thread_id=thread.id, role="assistant", content=intro_message)
-            except Exception as e:
-                logging.error(f"Error sending intro message: {e}")
-                traceback.print_exc()
-
+            # Send assistant's intro message into thread
+            openai.beta.threads.messages.create(thread_id=thread.id, role="assistant", content=intro_message)
             chat_sessions[session_id]["history"].append({"role": "assistant", "content": intro_message})
 
-        if not user_input:
+        # If no input provided, just return the session history
+        if not message and not image:
             return {"conversation": chat_sessions[session_id]["history"], "completed": False}
 
-        assistant_response = get_assistant_response(session_id, user_input)
+        # Upload image to OpenAI if provided
+        image_file_ids = []
+        if image:
+            uploaded_file = await image.read()
+            file_tuple = (image.filename, uploaded_file)  # Ensure filename is passed
+            openai_file = openai.files.create(
+                file=file_tuple,
+                purpose="vision"
+            )
+            image_file_ids.append(openai_file.id)
+            logging.info(f"Uploaded image file to OpenAI with file_id: {openai_file.id}")
+
+        # Get assistant's reply
+        assistant_response = get_assistant_response(session_id, message, image_file_ids)
         return {"message": assistant_response, "completed": False}
 
     except HTTPException:
@@ -135,33 +95,76 @@ async def chat(chat_request: ChatRequest, request: Request):
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 
-def get_assistant_response(session_id: str, user_input: str) -> str:
+def get_assistant_response(session_id: str, user_input: str, image_file_ids: List[str]) -> str:
+    """Builds message content and submits to OpenAI assistant, then retrieves reply."""
     try:
         thread = chat_sessions[session_id]["thread"]
-        message = openai.beta.threads.messages.create(thread_id=thread.id, role="user", content=user_input)
+        messages = []
 
-        run = openai.beta.threads.runs.create(thread_id=thread.id, assistant_id=assistant_id)
+        # Add user text message
+        if user_input:
+            messages.append({"type": "text", "text": user_input})
+
+        # Add uploaded image file references
+        for file_id in image_file_ids:
+            messages.append({"type": "image_file", "image_file": {"file_id": file_id, "detail": "high"}})
+
+        # Block empty submissions (should never happen)
+        if not messages:
+            raise HTTPException(status_code=400, detail="No valid input to send to assistant.")
+
+        # Send message to assistant thread
+        message = openai.beta.threads.messages.create(
+            thread_id=thread.id, role="user", content=messages
+        )
+
+        # Start assistant run
+        run = openai.beta.threads.runs.create(
+            thread_id=thread.id, assistant_id=assistant_id
+        )
+
+        # Wait for completion
         run = wait_on_run(run, thread)
         if run is None:
             return "Sorry, something went wrong. Please try again later."
 
+        # Get response messages after the user input
         messages = openai.beta.threads.messages.list(thread_id=thread.id, order="asc", after=message.id)
         assistant_response = next(
             (msg.content[0].text.value for msg in messages.data if msg.role == "assistant"), ""
         )
 
-        chat_sessions[session_id]["history"].extend(
-            [{"role": "user", "content": user_input}, {"role": "assistant", "content": assistant_response}]
-        )
+        # Log conversation history
+        chat_sessions[session_id]["history"].extend([
+            {"role": "user", "content": user_input if user_input else "Image sent"},
+            {"role": "assistant", "content": assistant_response}
+        ])
 
         return assistant_response
+
     except Exception as e:
         logging.error(f"Error in get_assistant_response: {e}")
         traceback.print_exc()
         return "Sorry, something went wrong. Please try again later."
 
 
+def wait_on_run(run, thread):
+    """Polls OpenAI until assistant completes processing the run."""
+    logging.info(f"Waiting on run {run.id} for thread {thread.id}")
+    try:
+        while run.status in ["queued", "in_progress"]:
+            time.sleep(0.5)
+            run = openai.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+
+        logging.info(f"Run {run.id} completed with status {run.status}")
+        return run
+    except Exception as e:
+        logging.error(f"Error while waiting on run: {e}")
+        traceback.print_exc()
+        return None
+
+
+# Run the FastAPI server (dev only)
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=5000)
