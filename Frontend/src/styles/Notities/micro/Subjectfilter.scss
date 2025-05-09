@@ -1,0 +1,37 @@
+.subject-filter-card {
+  height: 200px;
+  width: 325px;
+  border-radius: 15px;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease-in-out;
+
+  &:hover {
+    border-color: var(--primary-color, rgba(0, 0, 0, 0.1));
+  }
+  
+  &.selected {
+    border-color: var(--primary-color, #000460);
+  }
+  
+  .subject-icon-folder {
+    width: 60px;
+    height: 60px;
+    margin-left: 20px;
+    margin-top: 18px;
+  }
+  
+  .folder-label {
+    margin-left: 31px;
+    gap: 4px;
+    margin-top: 36px;
+    .folder-title {
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .folder-note-count {
+      font-size: 12px;
+    }
+  }
+}

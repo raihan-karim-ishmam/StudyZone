@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@mantine/tiptap": "^7.17.5",
+    "@tabler/icons-react": "^3.31.0",
+    "@tiptap/extension-placeholder": "^2.11.7",
+    "@tiptap/extension-underline": "^2.11.7",
+    "@tiptap/react": "^2.11.7",
+    "@tiptap/starter-kit": "^2.11.7"
+  }
+}
