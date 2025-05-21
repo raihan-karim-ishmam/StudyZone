@@ -6,6 +6,7 @@ import { subjectIcons } from '../../../subject-icons/subjectIcons';
 
 import '@mantine/spotlight/styles.css';
 import '../../../styles/Notities/macro/NoteSearch.scss';
+
 const NoteSearch = ({ allNotes, onNoteSelect, tabId }) => {
   // Transform notes data for the spotlight
   const actions = allNotes.map(note => ({
@@ -18,7 +19,7 @@ const NoteSearch = ({ allNotes, onNoteSelect, tabId }) => {
       
       // Call onNoteSelect and close the spotlight
       onNoteSelect(note, tabId);
-      spotlight.close();
+      spotlight.close('note-search-spotlight');
     },
     leftSection: (
       <img 

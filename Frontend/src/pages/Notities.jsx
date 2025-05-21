@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import dayjs from 'dayjs';
 
 import FilterCarousel from '../components/Notities/macro/Filtercarousel.jsx';
@@ -46,8 +46,11 @@ const getFoldersFromNotes = (notes) => {
   return Object.values(folderMap);
 };
 
-const Notities = () => {
-  // Initialize all state variables first
+const Notities = (props) => {
+  // Destructure the props
+  const { splitViewMode = false, openNoteId = null } = props;
+
+  // Use all existing state variables that are already defined
   const [allNotes, setAllNotes] = useState(mockNotes);
   const [allTags, setAllTags] = useState([]);
   const [folders, setFolders] = useState(getFoldersFromNotes(mockNotes));
@@ -67,6 +70,29 @@ const Notities = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [editingNoteIds, setEditingNoteIds] = useState(new Set());
   const [selectedDates, setSelectedDates] = useState([]);
+  
+  // Add a ref to track if we've initialized from openNoteId
+  const initializedRef = useRef(false);
+  const lastOpenNoteIdRef = useRef(null);
+  
+  // Add this state to track closed tab IDs
+  const [closedTabIds, setClosedTabIds] = useState(new Set());
+  
+  // Add this state to track whether a note was explicitly clicked in the input
+  const [manuallyOpenedNoteId, setManuallyOpenedNoteId] = useState(null);
+  
+  // Add a state to track manually closed note IDs
+  const [manuallyClosedNotes, setManuallyClosedNotes] = useState(new Set());
+  
+  // Add this state to track which notes are in the StudyZone input
+  const [inputNoteIds, setInputNoteIds] = useState(new Set());
+  
+  // Add these at the component level
+  const processedNoteIds = useRef(new Set()); // Track notes we've already processed
+  const isFirstRender = useRef(true);
+  
+  // Add this at the component level
+  const lastClickTimestampRef = useRef(0);
   
   // Now all state variables are initialized, you can use them
 
@@ -145,13 +171,24 @@ const Notities = () => {
       setOpenedNotes([...openedNotes, note]);
     }
     
+    // Set this note as active
     setActiveTabId(note.id);
+    
+    // If in split view, notify parent
+    if (splitViewMode && props.onNoteChange) {
+      props.onNoteChange(note);
+    }
   };
   
-  // Modify handleTabChange to save position before changing tabs
+  // Modified handleTabChange to ensure it works in split view mode
   const handleTabChange = (tabId) => {
-    // Just change the active tab
     setActiveTabId(tabId);
+    
+    // If we're in split view mode and this is a different note
+    if (splitViewMode && tabId !== openNoteId && props.onTabChange) {
+      // Notify the parent about the tab change (to update StudyZone if needed)
+      props.onTabChange(tabId);
+    }
   };
 
   // Similarly update other functions that change tabs
@@ -159,22 +196,26 @@ const Notities = () => {
     setActiveTabId('home');
   };
   
-  // Close a tab
+  // Update the handleCloseTab function to track closed notes
   const handleCloseTab = (noteId, navigateTo = null) => {
+    // Track that this note was manually closed
+    setManuallyClosedNotes(prev => {
+      const newSet = new Set(prev);
+      newSet.add(noteId);
+      return newSet;
+    });
+    
     // Remove the note/tab from opened notes
     const updatedOpenedNotes = openedNotes.filter(note => note.id !== noteId);
     setOpenedNotes(updatedOpenedNotes);
     
-    // If closing the active tab
+    // Update navigation
     if (activeTabId === noteId) {
       if (navigateTo) {
-        // If a specific navigation target is provided, go there
         setActiveTabId(navigateTo);
       } else if (updatedOpenedNotes.length > 0) {
-        // Otherwise, go to the previous tab (default behavior)
         setActiveTabId(updatedOpenedNotes[updatedOpenedNotes.length - 1].id);
       } else {
-        // If no tabs left, go home
         setActiveTabId('home');
       }
     }
@@ -469,7 +510,7 @@ const Notities = () => {
     }
   };
 
-  // Update the handleNewTabClick function to create unique tab IDs
+  // Modified handleNewTabClick to ensure new tabs become active
   const handleNewTabClick = () => {
     // Generate a unique ID for this new tab
     const uniqueId = `new-tab-${Date.now()}`;
@@ -481,34 +522,40 @@ const Notities = () => {
       type: 'new' // Used to identify this as a special tab
     }]);
     
-    // Switch to the new tab
+    // Set this as the active tab
     setActiveTabId(uniqueId);
+    
+    // Mark that we've manually changed tabs
+    initializedRef.current = true;
   };
 
-  // Handler for selecting a note from the NewTab spotlight
+  // Enhanced handleNewTabNoteSelect to ensure it switches tabs
   const handleNewTabNoteSelect = (note, tabId) => {
-    console.log('handleNewTabNoteSelect called with:', note.id, tabId);
-    
-    // First, check if this note is already open in another tab
+    // If note is already open, switch to that tab and close the new tab
     const existingNoteIndex = openedNotes.findIndex(tab => tab.id === note.id);
     
     if (existingNoteIndex !== -1) {
-      // Note is already open, just switch to that tab and close the new tab
+      // Note is already open
       const existingTabId = openedNotes[existingNoteIndex].id;
       
       // Remove the new tab
-      const updatedOpenedNotes = openedNotes.filter(tab => tab.id !== tabId);
+      setOpenedNotes(prev => prev.filter(tab => tab.id !== tabId));
       
-      // Update state
-      setOpenedNotes(updatedOpenedNotes);
+      // Immediately switch to the existing tab
       setActiveTabId(existingTabId);
       
-      return; // Exit early
+      // Notify parent if in split view mode
+      if (splitViewMode && props.onNoteChange) {
+        props.onNoteChange(openedNotes[existingNoteIndex]);
     }
     
-    // If we get here, the note is not already open
+      // Mark that we've manually changed tabs
+      initializedRef.current = true;
     
-    // Find the index of the new tab in the openedNotes array
+      return;
+    }
+    
+    // If note isn't already open, replace the new tab with this note
     const tabIndex = openedNotes.findIndex(tab => tab.id === tabId);
     
     if (tabIndex === -1) {
@@ -516,26 +563,27 @@ const Notities = () => {
       return;
     }
     
-    // Create a copy of openedNotes to modify
+    // Create updated openedNotes with the note replacing the tab
     const updatedOpenedNotes = [...openedNotes];
+    updatedOpenedNotes.splice(tabIndex, 1, note);
     
-    // Remove the new tab and add the actual note in its place
-    updatedOpenedNotes.splice(tabIndex, 1);
-    updatedOpenedNotes.splice(tabIndex, 0, note);
-    
-    console.log('Updated opened notes:', updatedOpenedNotes);
-    
-    // Update the opened notes state
+    // Update openedNotes
     setOpenedNotes(updatedOpenedNotes);
     
-    // Set the activeTabId to the actual note's ID
+    // Immediately switch to this note's tab
     setActiveTabId(note.id);
+    
+    // Notify parent if in split view mode
+    if (splitViewMode && props.onNoteChange) {
+      props.onNoteChange(note);
+    }
+    
+    // Mark that we've manually changed tabs
+    initializedRef.current = true;
   };
 
-  // Handler for creating a new note from NewTab
+  // Modified handleNewNote for consistent tab switching
   const handleNewNote = (newNote, tabId) => {
-    console.log('Creating new note:', newNote);
-    
     // Close the new tab
     const updatedOpenedNotes = openedNotes.filter(note => note.id !== tabId);
     
@@ -546,14 +594,14 @@ const Notities = () => {
     const updatedAllNotes = [...allNotes, newNote];
     const updatedFilteredNotes = [...filteredNotes, newNote];
     
-    // Update folders to include the new note's folder
+    // Update folders
     const updatedFolders = getFoldersFromNotes(updatedAllNotes);
     const updatedFolderCountMap = updatedFolders.reduce((acc, folder) => {
       acc[folder.title] = folder.noteCount;
       return acc;
     }, {});
     
-    // If the note has tags, update the allTags list
+    // Update allTags if needed
     let updatedAllTags = [...allTags];
     if (newNote.tags && newNote.tags.length > 0) {
       newNote.tags.forEach(tag => {
@@ -571,11 +619,19 @@ const Notities = () => {
     setFolderCountMap(updatedFolderCountMap);
     setAllTags(updatedAllTags);
     
-    // Set active tab to the new note
+    // IMPORTANT: Immediately set active tab to the new note
     setActiveTabId(newNote.id);
     
     // Start editing mode for this note
     startEditingNote(newNote.id);
+    
+    // Notify parent if in split view mode
+    if (splitViewMode && props.onNoteChange) {
+      props.onNoteChange(newNote);
+    }
+    
+    // Mark that we've manually changed tabs
+    initializedRef.current = true;
   };
 
   // Add this new useEffect for handling initial load
@@ -627,9 +683,65 @@ const Notities = () => {
     }
   }, [folders]); // This effect will run whenever folders changes
 
-  // Add this function to Notities.jsx - similar to handleNewNote but doesn't require a tabId
+  // Replace any previous useEffect that handles openNoteId with this one
+  useEffect(() => {
+    // Skip on first render or if not in split view
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
+    if (!splitViewMode || !openNoteId) return;
+    
+    // Only process this note ID if we haven't seen it yet
+    if (!processedNoteIds.current.has(openNoteId)) {
+      // Mark as processed so we don't re-open it
+      processedNoteIds.current.add(openNoteId);
+      
+      // Find the note to open
+      const noteToOpen = allNotes.find(note => note.id === openNoteId);
+      if (!noteToOpen) return;
+      
+      // Open the note
+      const isAlreadyOpen = openedNotes.some(note => note.id === openNoteId);
+      if (!isAlreadyOpen) {
+        setOpenedNotes(prev => [...prev, noteToOpen]);
+      }
+      
+      // Ensure the tabs are showing and this tab is active
+      setShouldRenderTabs(true);
+      setActiveTabId(openNoteId);
+    }
+  }, [openNoteId, splitViewMode, allNotes, openedNotes]);
+
+  // Add this reset effect to handle clicking on the same note again after closing
+  useEffect(() => {
+    // When activeTabId changes to 'home', it likely means we closed the tab
+    if (activeTabId === 'home' && openNoteId) {
+      // Remove this note from processed set so it can be opened again
+      processedNoteIds.current.delete(openNoteId);
+    }
+  }, [activeTabId, openNoteId]);
+
+  // Add a function to properly filter out duplicate tabs
+  const cleanedOpenedNotes = useMemo(() => {
+    // This creates a unique array of notes based on note ID
+    const uniqueNotes = [];
+    const notesIds = new Set();
+    
+    for (const note of openedNotes) {
+      if (!notesIds.has(note.id)) {
+        notesIds.add(note.id);
+        uniqueNotes.push(note);
+      }
+    }
+    
+    return uniqueNotes;
+  }, [openedNotes]);
+
+  // Modify handleCreateNewNote to respect manual navigation
   const handleCreateNewNote = () => {
-    // Create a new note object with placeholder data
+    // Create the new note as before...
     const newNote = {
       id: `new-note-${Date.now()}`,
       title: '',
@@ -638,45 +750,84 @@ const Notities = () => {
       tags: [],
       dateCreated: new Date().toISOString(),
       lastEdited: new Date().toISOString(),
-      isNew: true // Flag to indicate this is a brand new note
+      isNew: true
     };
     
-    // Add the new note to allNotes and filteredNotes
+    // Update all states as before...
     const updatedAllNotes = [...allNotes, newNote];
     const updatedFilteredNotes = [...filteredNotes, newNote];
-    
-    // Update folders to include the new note's folder
     const updatedFolders = getFoldersFromNotes(updatedAllNotes);
     const updatedFolderCountMap = updatedFolders.reduce((acc, folder) => {
       acc[folder.title] = folder.noteCount;
       return acc;
     }, {});
-    
-    // Add the new note to openedNotes
     const updatedOpenedNotes = [...openedNotes, newNote];
     
-    // Update all states
     setAllNotes(updatedAllNotes);
     setFilteredNotes(updatedFilteredNotes);
     setOpenedNotes(updatedOpenedNotes);
     setFolders(updatedFolders);
     setFolderCountMap(updatedFolderCountMap);
     
-    // Set active tab to the new note
+    // Set as active tab
     setActiveTabId(newNote.id);
     
-    // Start editing mode for this note
+    // Mark that we've manually changed tabs
+    initializedRef.current = true;
+    
+    // Start editing mode
     startEditingNote(newNote.id);
+    
+    // Notify parent if needed
+    if (splitViewMode && props.onNoteChange) {
+      props.onNoteChange(newNote);
+    }
   };
 
+  // Add this debugging at the top of the Notities component
+  console.log("Notities render:", { 
+    splitViewMode, 
+    openNoteId, 
+    activeTabId, 
+    openedNotes: openedNotes.map(n => n.id) 
+  });
+
+  // Replace the useEffect that uses splitViewNote with this:
+  useEffect(() => {
+    // Skip if not in split view or no openNoteId
+    if (!splitViewMode || !openNoteId) return;
+    
+    // Check if this is coming from App.jsx props.openNoteId
+    if (props.clickTimestamp && props.clickTimestamp > lastClickTimestampRef.current) {
+      // Update last timestamp 
+      lastClickTimestampRef.current = props.clickTimestamp;
+      
+      // Find the note
+      const noteToOpen = allNotes.find(note => note.id === openNoteId);
+      if (!noteToOpen) return;
+      
+      // Check if it's already open
+      const isAlreadyOpen = openedNotes.some(note => note.id === openNoteId);
+      
+      // Always add to openedNotes if not already there
+      if (!isAlreadyOpen) {
+        setOpenedNotes(prev => [...prev, noteToOpen]);
+      }
+      
+      // Force tabs to render and make it active
+      setShouldRenderTabs(true);
+      setActiveTabId(openNoteId);
+    }
+  }, [splitViewMode, openNoteId, props.clickTimestamp]);
+
   return (
-    <div className="notities-container">
+    <div className={`notities-container ${splitViewMode ? 'split-view-mode' : ''}`} style={{ position: 'relative' }}>
       {/* Tabs section with animation */}
       <div className="tabs-position-container">
         {shouldRenderTabs && (
           <div className={`tabs-wrapper ${tabsClass}`}>
             <NoteTabs
-              notes={openedNotes}
+              notes={cleanedOpenedNotes} // Use the cleaned unique array
               activeTabId={activeTabId}
               onTabChange={handleTabChange}
               onHomeClick={handleHomeClick}

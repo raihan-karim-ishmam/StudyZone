@@ -1,8 +1,22 @@
+@use '../../_variables.scss' as *; 
+
 .chat-container {
   display: flex;
   flex-direction: column;
-  width: 100%;
   height: 100%;
-  flex: 1;
   overflow: hidden;
+
+  .chat-history {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-bottom: 0;
+  }
+
+  .chat-input-background {
+    position: static;
+    width: 100%;
+    margin-top: auto;
+    background-color: $color-white;
+    z-index: 0;
+  }
 } 

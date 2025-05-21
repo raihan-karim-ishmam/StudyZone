@@ -1,0 +1,236 @@
+@use '../../_variables.scss' as *;  
+
+.chat-input-container {
+  position: relative !important;
+  margin: 0 auto 24px;
+  width: 48%;
+  min-width: 440px;
+  max-width: 770px;
+  display: flex;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-radius: 23px;
+  background-color: $color-white;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.06);
+  z-index: 1;
+  
+  &.dragging {
+    background-color: transparent;
+    
+    &::after {
+      content: 'Drop afbeeldingen hier';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: $color-black;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .chat-input, .input-actions, .send-button {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+  }
+
+  .selected-notes-preview {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    position: absolute;
+    top: -80px;
+    left: 20px;
+    height: 90px;
+    display: flex;
+    gap: 8px;
+    overflow-x: scroll;
+    max-width: calc(100% - 40px);
+  } 
+  
+  .selected-images-preview {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overflow-x: scroll;
+    position: absolute;
+    top: -80px;
+    left: 20px;
+    height: 76px;
+    display: flex;
+    gap: 8px;
+    overflow-x: scroll;
+    max-width: calc(100% - 328px);
+    padding-bottom: 5px;
+    
+    .image-preview-container {
+      height: 70px;
+      background-color: $color-white;
+      display: flex;
+      align-items: center;
+      position: relative;
+      
+      .image-preview {
+        height: 100%;
+        width: auto;
+        object-fit: cover;
+        border-radius: 12px;
+      }
+      
+      .remove-image {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: $color-white;
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        &:hover {
+          background-color: $color-background-light;
+        }
+      }
+    }
+  }
+  
+  .input-actions {
+    display: flex;
+    gap: 8px;
+    position: absolute;
+    left: 14px;
+    bottom: 0px;
+    .image-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      margin-left: 0;
+      transition: opacity 0.2s ease;
+      
+      &:hover {
+        opacity: 0.7;
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  .mantine-InputWrapper-root{
+    position: relative;
+    margin: 0 auto;
+    margin-top: 1px;
+    width: calc(100% - 90px);
+    .mantine-Textarea-wrapper{
+      width: 100%;
+      .mantine-Textarea-input {
+        position: static !important;
+        height: auto !important;
+        width: 100%;
+        border: none;
+        max-height: 120px;
+        min-height: 22px;
+        font-family: inherit;
+        font-size: 14px;
+        padding: 0;
+        margin: 0;
+        resize: none;
+        overflow-y: hidden;
+        
+        &:focus {
+          outline: none;
+        }
+        
+        &::placeholder {
+          color: $color-gray;
+        }
+        
+        &:disabled {
+          cursor: not-allowed;
+          background-color: transparent !important;
+          color: inherit;
+          -webkit-text-fill-color: inherit;
+          -webkit-opacity: 1;
+          opacity: 1;
+        }
+      }
+    }
+  }
+  
+  .send-button {
+    background: $color-primary-blue;
+    border: none;
+    cursor: not-allowed;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 9px;
+    bottom: -3px;
+    padding: 0;
+    height: 28px;
+    width: 28px;
+    &.active {
+      opacity: 1;
+      background-color: $color-primary-blue;
+      cursor: pointer;
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+    
+    &:disabled {
+      background-color: $color-primary-blue;
+      opacity: 0.5;
+    }
+
+    &.disabled {
+      background-color: $color-primary-blue;
+      opacity: 1;
+      &:hover {
+        opacity: .7;
+        cursor: pointer;
+      }
+    }
+    
+    img {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  form {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    width: 100%;
+    min-height: 22px;
+    position: relative;
+  }
+} 
+
+.chat-history {
+  padding-bottom: 150px !important;
+} 
+

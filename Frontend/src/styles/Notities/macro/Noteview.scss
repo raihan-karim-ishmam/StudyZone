@@ -5,6 +5,8 @@
   height: 100%;
   max-width: 1080px;
   margin-top: 0px;
+  padding-left: 56px;
+  padding-right: 56px;
   * {
     max-width: 100%;
   }
@@ -156,11 +158,13 @@
     margin-top: 22px;
   }
 
-  .note-view-quote {
-    margin-bottom: 22px;
+  .mantine-Blockquote-root{
+    margin-top: 80px !important;
   }
+
   .note-view-content {
-    min-height: 300px;
+    min-height: 500px;
+    margin-top: 22px;
   }
 }
 

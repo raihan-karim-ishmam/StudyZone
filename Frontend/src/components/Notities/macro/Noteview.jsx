@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import dayjs from 'dayjs';
 import { Blockquote, TypographyStylesProvider, TextInput, Button, Group, Tooltip, ActionIcon, TagsInput, Select } from '@mantine/core';
+import { useFocusTrap } from '@mantine/hooks';
 import { Kbd } from '@mantine/core';
 import { IconInfoCircle, IconCheck, IconX, IconPhoto } from '@tabler/icons-react';
 import { subjectColors, subjectColorsPrimary, subjectIcons } from '../../../subject-icons/subjectIcons';
@@ -47,6 +48,7 @@ const NoteView = ({
   const [editedTags, setEditedTags] = useState(note.tags || []);
   const [editedFolder, setEditedFolder] = useState(note.folder || 'Uncategorized');
   
+  const focusTrapRef = useFocusTrap();
   const lowerCaseSubject = (editedFolder || 'Uncategorized').toLowerCase();
 
   const quoteIcon = <IconInfoCircle />;
@@ -365,9 +367,24 @@ const NoteView = ({
         }
         
         // Reset edited fields to original values
-        setEditedTitle(note.title);
+        const folder = note.folder || 'Uncategorized';
+        
+        // Check if the title is empty, if so set it to "Subject + Notitie"
+        if (!note.title || note.title.trim() === '') {
+          setEditedTitle(`${folder} Notitie`);
+          
+          // Also update the note title in the parent component
+          onSave({
+            ...note,
+            title: `${folder} Notitie`,
+            dateLastModified: new Date().toISOString()
+          });
+        } else {
+          setEditedTitle(note.title);
+        }
+        
         setEditedTags(note.tags || []);
-        setEditedFolder(note.folder || 'Uncategorized');
+        setEditedFolder(folder);
         
         // Exit edit mode
         stopEditing();
@@ -455,7 +472,7 @@ const NoteView = ({
   const renderDraftIndicator = () => {
     if (isEditing && draftContent) {
       return (
-        <Text size="xs" color="dimmed" style={{ marginTop: '8px' }}>
+        <Text size="xs" color="dimmed" style={{ marginTop: '8px', color: '#89939E' }}>
           Draft automatisch opgeslagen. Sla eerst je notitie op voordat je deze browser tab sluit.
         </Text>
       );
@@ -534,6 +551,7 @@ const NoteView = ({
                               Titel
                           </div>
                           <TextInput
+                              ref={focusTrapRef}
                               value={editedTitle}
                               onChange={(e) => setEditedTitle(e.target.value)}
                               size="xl"
@@ -624,16 +642,6 @@ const NoteView = ({
         {!isEditing && (
           <>
             <div className="note-view-divider">.</div>
-            <Blockquote 
-              className="note-view-quote" 
-              icon={quoteIcon} 
-              color={subjectColorsPrimary[(note?.folder || 'Uncategorized').toLowerCase()]} 
-              cite="– De StudyZone Team" 
-              mt="xl"
-            >
-              Bij het aanpassen van een notitie gebruik <Kbd>⌘</Kbd> + <Kbd>K</Kbd> om vragen te stellen en antwoorden van de StudyZone direct in de notitie te verwerken. <br/><br/>
-              Selecteer een stuk tekst om hier vragen over te stellen in de StudyZone.
-            </Blockquote>
           </>
         )}
         
@@ -738,6 +746,18 @@ const NoteView = ({
               />
             </TypographyStylesProvider>
           </>
+        )}
+        {!isEditing && (
+        <Blockquote 
+          className="note-view-quote" 
+          icon={quoteIcon} 
+          color={subjectColorsPrimary[(note?.folder || 'Uncategorized').toLowerCase()]} 
+          cite="– De StudyZone Team" 
+          mt="xl"
+        >
+            Bij het aanpassen van een notitie gebruik <Kbd>⌘</Kbd> + <Kbd>K</Kbd> om vragen te stellen en antwoorden van de StudyZone direct in de notitie te verwerken. <br/><br/>
+            Selecteer een stuk tekst om hier vragen over te stellen in de StudyZone.
+          </Blockquote>
         )}
         <Footer />
       </div>

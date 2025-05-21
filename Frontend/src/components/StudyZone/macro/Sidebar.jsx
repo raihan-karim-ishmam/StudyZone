@@ -29,6 +29,7 @@ const Sidebar = ({
   setActiveChat,
   chatsBySubject,
   setChatsBySubject,
+  setActiveSpotlight
 }) => {
   const { user, updateUserField } = useUser();
   const subjects = user.subjects;
@@ -215,7 +216,10 @@ const Sidebar = ({
         <img className='drawer-header-close button' onClick={() => { close && close(); handleCloseContextMenu(); }} src={chevronLeft} alt="Close" />
       </div>
 
-      <div className="spotlight-search-container flex-row button" onClick={() => spotlight.open()}>
+      <div 
+        className="spotlight-search-container flex-row button" 
+        onClick={() => { setActiveSpotlight('main'); setTimeout(() => { spotlight.open() }, 100) }}
+      >
         <img className='spotlight-search-icon' src={searchIcon} alt="Search Icon" />
         <div className="spotlight-search-text">
           Zoek...

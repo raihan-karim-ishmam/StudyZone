@@ -3,7 +3,7 @@ import { Menu as MantineMenu } from '@mantine/core';
 import PropTypes from 'prop-types';
 
 
-function Menu({ items, position = 'bottom-end', width = 200, target, trigger = 'click', openDelay, closeDelay}) {
+function Menu({ items, position = 'bottom-end', width = 200, target, trigger = 'click', offset, openDelay, closeDelay}) {
   return (
     <MantineMenu 
       shadow="md" 
@@ -12,6 +12,7 @@ function Menu({ items, position = 'bottom-end', width = 200, target, trigger = '
       trigger={trigger}
       openDelay={openDelay}
       closeDelay={closeDelay}
+      offset={offset}
       styles={{
         dropdown: {
           backgroundColor: '#fefefe',
