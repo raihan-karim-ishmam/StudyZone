@@ -94,6 +94,11 @@ const Notities = (props) => {
   // Add this at the component level
   const lastClickTimestampRef = useRef(0);
   
+  // Add these new states at the top of your component with other state variables
+  const [headerText, setHeaderText] = useState('');
+  const [isTypingHeader, setIsTypingHeader] = useState(false);
+  const fullHeaderText = 'Notities';
+  
   // Now all state variables are initialized, you can use them
 
   // Initialize allTags in a useEffect
@@ -820,6 +825,26 @@ const Notities = (props) => {
     }
   }, [splitViewMode, openNoteId, props.clickTimestamp]);
 
+  // Add this new useEffect at an appropriate location with your other useEffects
+  useEffect(() => {
+    // Start typing animation when component mounts
+    setIsTypingHeader(true);
+    setHeaderText('');
+
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex < fullHeaderText.length) {
+        setHeaderText(prev => prev + fullHeaderText[currentIndex]);
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+        setIsTypingHeader(false);
+      }
+    }, 50); // Adjust speed as needed
+
+    return () => clearInterval(typingInterval);
+  }, []); // Empty dependency array ensures it only runs once on mount
+
   return (
     <div className={`notities-container ${splitViewMode ? 'split-view-mode' : ''}`} style={{ position: 'relative' }}>
       {/* Tabs section with animation */}
@@ -845,7 +870,8 @@ const Notities = (props) => {
           <div className="notities-content-wrapper">
             <div className="notities-header flex-row">
               <div className="notities-header-text">
-                Notities
+                {headerText}
+                {isTypingHeader && <span className="typing-cursor"></span>}
               </div>
               <Tooltip color='#fefefe' style={{boxShadow: '0px 0px 20px 0px rgba(0, 0, 0, 0.11)', color: '#000000'}} withArrow label="Nieuwe Notitie">
                 <div className="notities-header-button flex-row" onClick={handleCreateNewNote}>
@@ -885,7 +911,7 @@ const Notities = (props) => {
             </div>
             
             <div className="carousel-container">
-              <p className="carousel-header">Vakken</p>
+              <p className="carousel-header">Folders</p>
               <FilterCarousel 
                 folders={folders} 
                 selectedSubjects={selectedSubjects}

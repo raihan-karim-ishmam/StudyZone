@@ -28,12 +28,15 @@
   overflow-y: scroll;
 
   .active-chat-header {
-    position: fixed;
+    position: absolute;
     margin-left: 34px;
     margin-right: 34px;
     margin-top: 24px;
     font-size: 16px;
     z-index: 1;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 76px);
     
     .active-chat {
       align-items: center;
@@ -84,6 +87,26 @@
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+        }
+      }
+    }
+    .pomodoro-button{
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+      justify-content: center;
+      align-items: center;
+      background-color: $color-white;
+      border-radius: 100px;
+      z-index: 1000;
+      img{
+        height: 28px;
+        width: 28px;
+        transition: opacity 0.2s ease;
+      }
+      &:hover{
+        img{
+          opacity: .6;
         }
       }
     }
@@ -244,3 +267,218 @@
   }
 }
 
+.pomodoro-modal-slide-content{
+  font-family: 'Poppins', sans-serif;
+  justify-content: center;
+  align-items: center;
+  .session-slide{
+    margin-top: 20px;
+  }
+  .session-amount-slide{
+    margin-top: 20px;
+  }
+  .pause-slide{
+    margin-top: 20px;
+  }
+  .pomodoro-modal-slide-content-container{
+    text-align: center;
+    position: relative;
+    .pomodoro-modal-slide-content-title{
+      font-size: 20px;
+      font-weight: 600;
+      color: $color-black;
+    }
+    .pomodoro-modal-slide-content-ring-progress{
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      transform: translate(-50%, 0%);
+      max-height: 230px;
+    }
+    .ring-progress-content{
+      position: absolute;
+      top: 64px;
+      left: 50%;
+      transform: translate(-50%, 0%);
+      width: 140px;
+      .focus-icon{
+        width: 22px;
+        height: 22px;
+      }
+      .ring-progress-content-time{
+        .ring-progress-content-time-value{
+          font-size: 32px;
+          font-weight: 500;
+          color: $color-primary-orange;
+          .ring-progress-content-time-value-unit{
+            font-size: 16px;
+            font-weight: 500;
+            color: $color-primary-orange;
+          }
+        }
+        .ring-progress-content-time-description{
+          margin-top: 6px;
+          font-size: 12px;
+          font-weight: 500;
+          color: $color-gray;
+        }
+      }
+    }
+    .pomodoro-modal-slide-content-description{
+      font-size: 16px;
+      color: $color-primary-orange;
+      margin-top: 10px;
+    }
+    .pomodoro-modal-slide-content-input{
+      gap: 8px;
+      align-items: center;
+      font-size: 24px;
+      font-weight: 500;
+      margin-top: 8px;
+      .minus-button{
+        margin-right: 14px;
+      }
+      .plus-button{
+        margin-left: 14px;
+      }
+      .pomodoro-modal-slide-content-input-button{
+        opacity: .6;
+        margin-top: 24px;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        background-color: $color-background-light;
+        border-radius: 100px;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.2s ease;
+        img{
+          width: 20px;
+          height: 20px;
+        }
+        &:hover{
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+.timer-modal-content{
+  justify-content: center;
+  .timer-modal-ring-progress{
+    justify-content: center;
+    .m_b23f9dc4{
+      top: 45.7%;
+    }
+    .timer-modal-ring-progress-icon{
+      img{
+        width: 22px;
+        height: 22px;
+        margin-bottom: -6px;
+      }
+    }
+    .timer-modal-ring-progress-time{
+      color: $color-primary-orange;
+    }
+    .timer-modal-ring-progress-description{ 
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: $color-gray;
+    }
+  }
+  .timer-modal-buttons{
+    padding-top: 24px;
+    padding-bottom: 42px;
+  }
+}
+
+.pomodoro-modal-content .mantine-Carousel-controls{
+  display: none;
+}
+
+.timer-modal{
+  .m_b5489c3c.m_d0e2b9cd.mantine-Modal-header{
+    padding: 0 !important;
+  }
+  
+  .m_b5489c3c{
+    min-height: 0 !important;
+  }
+  .m_5df29311{
+    padding: 0 !important;
+  }
+}
+
+.settings-modal{
+  .m_b5489c3c.m_d0e2b9cd.mantine-Modal-header{
+    padding: 0 !important;
+  }
+  
+  .m_b5489c3c{
+    min-height: 0 !important;
+  }
+  .m_5df29311{
+    padding: 0 !important;
+  }
+}
+
+.mantine-Modal-close{
+  margin-right: 10px !important;
+  margin-top: 10px !important;
+  border-radius: 100px !important;
+  transition: all 0.2s ease;
+}
+
+.m_eae68602{
+  background-color: $color-primary-blue !important;
+}
+
+.m_eae68602 {
+  width: 12px;
+  height: 4px;
+  transition: width 250ms ease;
+
+  &[data-active] {
+    width: 22px;
+  }
+}
+
+.m_9df02822{
+  --modal-size-md: 390px !important;
+}
+
+.mantine-PinInput-pinInput:nth-of-type(2){
+  position: relative;
+}
+
+.mantine-PinInput-pinInput:nth-of-type(2)::after {
+  content: ":";
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 1rem);  
+  transform: translateY(-50%);
+  font-size: 0.8em;
+  color: $color-black;
+  pointer-events: none;
+  margin-top: 10px;
+}
+
+.mantine-PinInput-pinInput:nth-of-type(3) {
+  margin-left: 1.4rem;
+}
+
+.mantine-Input-input.mantine-PinInput-input{
+  width: 40px;
+  height: 60px;
+  border-radius: 12px;
+  border: none;
+  background-color: $color-background-light;
+  transition: all 0.1s ease;
+  font-size: 24px;
+}
+
+.mantine-Carousel-indicator{
+  pointer-events: none;
+}

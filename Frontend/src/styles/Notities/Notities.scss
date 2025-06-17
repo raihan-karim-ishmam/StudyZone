@@ -48,6 +48,16 @@
                     font-weight: 600;
                     margin-top: 56px;
                     margin-bottom: 22px;
+                    position: relative;
+                    
+                    .typing-cursor {
+                        display: inline-block;
+                        width: 2px;
+                        height: 1em;
+                        background-color: $color-primary-blue;
+                        margin-left: 2px;
+                        animation: blink 0.7s infinite;
+                    }
                 }
                 .notities-header-button{
                     cursor: pointer;
@@ -224,7 +234,7 @@
 
 .m_fd1ab0aa.m_54c44539.mantine-Modal-content.m_1b7284a3.mantine-Paper-root{
     background-color: $color-white !important;
-    border-radius: 10px !important;
+    border-radius: 16px !important;
 }
 
 .m_dc6a3c71, .m_f6645d97, .m_2351eeb0, .m_396ce5cb{
@@ -332,4 +342,9 @@
         top: 10px;
         border-radius: 100px;
     }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }

@@ -7,7 +7,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import '../../../styles/StudyZone/micro/ChatHistory.scss';
 import logo_avatar from '../../../assets/svg/studyzone/assistant-avatar.svg';
-import logo from '../../../assets/svg/global/logo.svg';     
+import logo from '../../../assets/image/global/logo.png';     
 import subjectIcons from '../../../subject-icons/subjectIcons';
 import { subjectColorsPrimary } from '../../../subject-icons/subjectIcons.js';
 
@@ -111,7 +111,7 @@ const ChatHistory = ({
         // User scrolled up - disable auto-scroll immediately
         // Use a smaller threshold - 10px instead of 50px
         const distanceFromBottom = el.scrollHeight - scrollTop - el.clientHeight;
-        if (distanceFromBottom > 10) { 
+        if (distanceFromBottom > 6) { 
           setAutoScrollEnabled(false);
           console.log("Auto-scroll disabled - user scrolled up");
         }
