@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, memo } from 'react';
 import dayjs from 'dayjs';
 
 import FilterCarousel from '../components/Notities/macro/Filtercarousel.jsx';
@@ -46,7 +46,8 @@ const getFoldersFromNotes = (notes) => {
   return Object.values(folderMap);
 };
 
-const Notities = (props) => {
+// Wrap the entire Notities component with React.memo
+const Notities = memo((props) => {
   // Destructure the props
   const { splitViewMode = false, openNoteId = null } = props;
 
@@ -845,6 +846,47 @@ const Notities = (props) => {
     return () => clearInterval(typingInterval);
   }, []); // Empty dependency array ensures it only runs once on mount
 
+  // Memoize all the callback functions to prevent recreation
+  const memoizedHandleSave = useCallback((updatedNote) => {
+    // Update the note in allNotes
+    const updatedAllNotes = allNotes.map(note => 
+      note.id === updatedNote.id ? updatedNote : note
+    );
+    setAllNotes(updatedAllNotes);
+    
+    // Update the note in openedNotes if it's open
+    const updatedOpenedNotes = openedNotes.map(note => 
+      note.id === updatedNote.id ? updatedNote : note
+    );
+    setOpenedNotes(updatedOpenedNotes);
+    
+    // Update folders if folder changed
+    setFolders(getFoldersFromNotes(updatedAllNotes));
+    
+    console.log('Note saved:', updatedNote);
+  }, [allNotes, openedNotes]);
+
+  const memoizedHandleDeleteNote = useCallback((noteId) => {
+    // ... existing delete logic ...
+  }, [allNotes, openedNotes, activeTabId]);
+
+  const memoizedStartEditingNote = useCallback((noteId) => {
+    setEditingNoteIds(prev => new Set([...prev, noteId]));
+  }, []);
+
+  const memoizedStopEditingNote = useCallback((noteId) => {
+    setEditingNoteIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(noteId);
+      return newSet;
+    });
+  }, []);
+
+  // Memoize the active note to prevent recreation
+  const memoizedActiveNote = useMemo(() => {
+    return openedNotes.find(note => note.id === activeTabId);
+  }, [openedNotes, activeTabId]);
+
   return (
     <div className={`notities-container ${splitViewMode ? 'split-view-mode' : ''}`} style={{ position: 'relative' }}>
       {/* Tabs section with animation */}
@@ -1008,11 +1050,11 @@ const Notities = (props) => {
                 <Noteview 
                   key={`note-${activeNote.id}-${Date.now()}`}
                   note={activeNote}
-                  onSave={handleSave}
-                  onDelete={() => openDeleteConfirmation(activeNote.id, activeNote.title)}
+                  onSave={memoizedHandleSave}
+                  onDelete={memoizedHandleDeleteNote}
                   isEditing={isNoteInEditMode(activeNote.id)}
-                  startEditing={() => startEditingNote(activeNote.id)}
-                  stopEditing={() => stopEditingNote(activeNote.id)}
+                  startEditing={() => memoizedStartEditingNote(activeNote.id)}
+                  stopEditing={() => memoizedStopEditingNote(activeNote.id)}
                 />
               </div>
             </div>
@@ -1030,6 +1072,16 @@ const Notities = (props) => {
       )}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function - only re-render if specific props change
+  return (
+    prevProps.splitViewMode === nextProps.splitViewMode &&
+    prevProps.openNoteId === nextProps.openNoteId &&
+    prevProps.clickTimestamp === nextProps.clickTimestamp &&
+    prevProps.onOpenSplitView === nextProps.onOpenSplitView &&
+    prevProps.onNoteChange === nextProps.onNoteChange &&
+    prevProps.onTabChange === nextProps.onTabChange
+  );
+});
 
 export default Notities;

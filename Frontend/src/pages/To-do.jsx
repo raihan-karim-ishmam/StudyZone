@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useDate } from '../context/DateContext';
 import { getTodosByDate, createTodo, deleteTodo, toggleTodoComplete, updateTodo } from '../utilities/todoService';
 import { DatePickerInput } from '@mantine/dates';
 import { Tooltip, Accordion, Skeleton } from '@mantine/core';
@@ -12,105 +13,52 @@ import TodoItem from '../components/Todo/macro/TodoItem';
 import '../styles/Todo/Todo.scss';
 import '../styles/App.scss';
 
-import chevronRight from '../assets/svg/global/chevron.svg';
+import chevronRight from '../assets/svg/todo/chevron.svg';
 import calendar from '../assets/svg/notities/calendar_search.svg';
 import plusIcon from '../assets/svg/todo/plus.svg';
 
 const ToDo = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Simple state initialization with localStorage fallback
-  const [selectedDate, setSelectedDate] = useState(() => {
-    // Try localStorage first (most reliable)
-    const savedDate = localStorage.getItem('selectedTodoDate');
-    if (savedDate) {
-      try {
-        const savedDateObj = parseDateString(savedDate);
-        if (!isNaN(savedDateObj.getTime())) {
-          return savedDateObj;
-        }
-      } catch (error) {
-        console.error('Invalid saved date:', error);
-      }
-    }
-    // Fallback to today
-    return new Date();
-  });
+  // Use global date context instead of local state
+  const { 
+    selectedDate, 
+    updateSelectedDate, 
+    goToToday: contextGoToToday,
+    getFormattedDate,
+    formatDateString,
+    parseDateString 
+  } = useDate();
   
-  const [currentWeekDate, setCurrentWeekDate] = useState(() => {
-    const savedDate = localStorage.getItem('selectedTodoDate');
-    if (savedDate) {
-      try {
-        const savedDateObj = parseDateString(savedDate);
-        if (!isNaN(savedDateObj.getTime())) {
-          return savedDateObj;
-        }
-      } catch (error) {
-        console.error('Invalid saved date:', error);
-      }
-    }
-    return new Date();
-  });
-  
+  // Local state for week navigation (separate from selected date)
+  const [currentWeekDate, setCurrentWeekDate] = useState(selectedDate);
   const [currentWeek, setCurrentWeek] = useState([]);
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [accordionValue, setAccordionValue] = useState(null);
 
-  // Helper function to get the start of the week (Monday) - COMPLETELY REWRITTEN
-  const getWeekStart = (date) => {
-    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()); // Clean date copy
-    const day = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    
-    // Calculate days to subtract to get to Monday
-    const daysToSubtract = day === 0 ? 6 : day - 1; // If Sunday (0), go back 6 days, otherwise go back (day - 1) days
-    
-    // Use a safer approach: subtract days one by one to avoid month boundary issues
-    const weekStart = new Date(d);
-    weekStart.setDate(d.getDate() - daysToSubtract);
-    
-    return weekStart;
-  };
-
-  // Helper function to check if two dates are the same day - DEBUGGED VERSION
-  const isSameDay = (date1, date2) => {
-    if (!date1 || !date2) return false;
-    
-    const d1Year = date1.getFullYear();
-    const d1Month = date1.getMonth(); 
-    const d1Date = date1.getDate();
-    
-    const d2Year = date2.getFullYear();
-    const d2Month = date2.getMonth();
-    const d2Date = date2.getDate();
-    
-    return d1Year === d2Year && d1Month === d2Month && d1Date === d2Date;
-  };
-
-  // Helper function to format date as YYYY-MM-DD - IMPROVED
-  const formatDateString = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  // Helper function to parse date from string - IMPROVED  
-  const parseDateString = (dateString) => {
-    const [year, month, day] = dateString.split('-').map(num => parseInt(num, 10));
-    return new Date(year, month - 1, day); // month is 0-indexed
-  };
-
-  // Simple effect: sync URL with current state (optional, for sharing)
+  // Sync URL with selected date (optional - for sharing/bookmarking)
   useEffect(() => {
     const dateString = formatDateString(selectedDate);
     setSearchParams({ date: dateString }, { replace: true });
-  }, [selectedDate]);
+  }, [selectedDate, setSearchParams]);
 
-  // Simple effect: save to localStorage whenever date changes
-  useEffect(() => {
-    localStorage.setItem('selectedTodoDate', formatDateString(selectedDate));
-  }, [selectedDate]);
+  // Helper functions remain the same
+  const getWeekStart = (date) => {
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const day = d.getDay();
+    const daysToSubtract = day === 0 ? 6 : day - 1;
+    const weekStart = new Date(d);
+    weekStart.setDate(d.getDate() - daysToSubtract);
+    return weekStart;
+  };
+
+  const isSameDay = (date1, date2) => {
+    if (!date1 || !date2) return false;
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
 
   // Load todos when selected date changes
   useEffect(() => {
@@ -131,14 +79,36 @@ const ToDo = () => {
     loadTodos();
   }, [selectedDate]);
 
-  // Initialize and update week when currentWeekDate changes
+  // Sync current week date with selected date when needed
+  useEffect(() => {
+    setCurrentWeekDate(selectedDate);
+  }, [selectedDate]);
+
+  // Generate week when currentWeekDate changes
   useEffect(() => {
     const weekStart = getWeekStart(currentWeekDate);
     const weekDates = generateWeekDates(weekStart);
     setCurrentWeek(weekDates);
   }, [currentWeekDate, selectedDate]);
 
-  // Handle week navigation - FIXED: don't change selectedDate
+  // Updated event handlers to use global state
+  const handleDateClick = (date) => {
+    updateSelectedDate(date);
+  };
+
+  const handleDatePickerChange = (date) => {
+    if (date) {
+      updateSelectedDate(date);
+      setCurrentWeekDate(date);
+    }
+  };
+
+  const goToToday = () => {
+    contextGoToToday();
+    setCurrentWeekDate(new Date());
+  };
+
+  // Week navigation (doesn't change selected date, just the week view)
   const goToPreviousWeek = () => {
     const newWeekDate = new Date(currentWeekDate);
     newWeekDate.setDate(newWeekDate.getDate() - 7);
@@ -151,32 +121,8 @@ const ToDo = () => {
     setCurrentWeekDate(newWeekDate);
   };
 
-  // Simplified date handlers
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
-  };
-
-  const handleDatePickerChange = (date) => {
-    if (date) {
-      setSelectedDate(date);
-      setCurrentWeekDate(date);
-    }
-  };
-
-  const goToToday = () => {
-    const today = new Date();
-    setSelectedDate(today);
-    setCurrentWeekDate(today);
-  };
-
-  // Handle menu click (placeholder for future implementation)
-  const handleMenuClick = (todo) => {
-    console.log('Menu clicked for todo:', todo);
-    // TODO: Implement menu functionality later
-  };
-
-  // Get formatted date for display - UPDATED FORMAT WITH YEAR
-  const getFormattedDate = () => {
+  // Display formatted date for UI
+  const getDisplayFormattedDate = () => {
     const options = { 
       day: 'numeric',
       month: 'long',
@@ -184,14 +130,11 @@ const ToDo = () => {
       weekday: 'long'
     };
     const formatted = selectedDate.toLocaleDateString('nl-NL', options);
-    
-    // Split the formatted date to rearrange it
     const parts = formatted.split(' ');
-    const weekday = parts[0]; // dinsdag
-    const day = parts[1]; // 17
-    const month = parts[2]; // juni
-    const year = parts[3]; // 2025
-    
+    const weekday = parts[0];
+    const day = parts[1];
+    const month = parts[2];
+    const year = parts[3];
     return `${day} ${month} ${year} - ${weekday}`;
   };
 
@@ -261,7 +204,7 @@ const ToDo = () => {
           autoClose: 3000,
         });
 
-        // Reload todos after toggle (keep all todos, including completed ones)
+        // Use formatDateString directly
         const dateString = formatDateString(selectedDate);
         const todosData = await getTodosByDate(dateString);
         setTodos(todosData);
@@ -289,7 +232,7 @@ const ToDo = () => {
           autoClose: 3000,
         });
 
-        // Reload todos after deletion
+        // Use formatDateString directly
         const dateString = formatDateString(selectedDate);
         const todosData = await getTodosByDate(dateString);
         setTodos(todosData);
@@ -324,10 +267,15 @@ const ToDo = () => {
         const todosData = await getTodosByDate(dateString);
         setTodos(todosData);
         
-        // Open the accordion for the new todo and put it in edit mode
+        // Open the accordion for the new todo
         setAccordionValue(newTodo.id);
         
-        // The TodoItem will handle entering edit mode for empty todos
+        notifications.show({
+          title: 'Nieuwe todo toegevoegd',
+          message: 'Je kunt nu de details invullen',
+          color: '#FF6601',
+          autoClose: 3000,
+        });
       }
     } catch (error) {
       notifications.show({
@@ -349,7 +297,7 @@ const ToDo = () => {
         color: 'red',
         autoClose: 3000,
       });
-      return false; // Return false to indicate validation failed
+      return false;
     }
 
     try {
@@ -363,11 +311,11 @@ const ToDo = () => {
           autoClose: 3000,
         });
 
-        // Reload todos after update
+        // Use formatDateString directly
         const dateString = formatDateString(selectedDate);
         const todosData = await getTodosByDate(dateString);
         setTodos(todosData);
-        return true; // Return true to indicate success
+        return true;
       }
     } catch (error) {
       notifications.show({
@@ -381,7 +329,7 @@ const ToDo = () => {
   };
 
   const handleDateChange = async (newDate) => {
-    setSelectedDate(newDate);
+    updateSelectedDate(newDate);
     // TODO: Replace with actual API call when backend ready
     // await updateUserPreference('lastSelectedTodoDate', formatDateString(newDate));
   };
@@ -466,14 +414,13 @@ const ToDo = () => {
         ) : todos.length > 0 ? (
           <>
             <div style={{ padding: '20px 0 10px 0', fontSize: '16px', fontWeight: '500', color: '#89939E' }}>
-              {getFormattedDate()}
+              {getDisplayFormattedDate()}
             </div>
             <Accordion multiple className='todo-accordion' radius="md" value={accordionValue} onChange={setAccordionValue}>
               {todos.map((todo) => (
                 <TodoItem
                   key={todo.id}
                   todo={todo}
-                  onMenuClick={handleMenuClick}
                   onToggleComplete={handleToggleComplete}
                   onDeleteTodo={handleDeleteTodo}
                   onUpdateTodo={handleUpdateTodo}
@@ -505,7 +452,7 @@ const ToDo = () => {
         ) : (
           <>
             <div style={{ paddingTop: '180px', textAlign: 'center', color: '#89939E' }}>
-              Geen todos voor {getFormattedDate()}
+              Geen todos voor {getDisplayFormattedDate()}
             </div>
             <div className='add-todo-button' style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
               <img src={plusIcon} alt="plus" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import PropTypes from 'prop-types';
 import dayjs from 'dayjs';
 import { Blockquote, TypographyStylesProvider, TextInput, Button, Group, Tooltip, ActionIcon, TagsInput, Select } from '@mantine/core';
@@ -35,7 +35,8 @@ import Notepreviewtag from '../micro/Notepreviewtag';
 
 import '../../../styles/Notities/macro/Noteview.scss';
 
-const NoteView = ({ 
+// Wrap the entire component with React.memo to prevent unnecessary re-renders
+const NoteView = memo(({ 
   note, 
   onSave, 
   onDelete, 
@@ -43,65 +44,47 @@ const NoteView = ({
   startEditing, 
   stopEditing,
 }) => {
-  const { user } = useUser(); // Get user from UserContext
-  const [editedTitle, setEditedTitle] = useState(note.title);
-  const [editedTags, setEditedTags] = useState(note.tags || []);
-  const [editedFolder, setEditedFolder] = useState(note.folder || 'Uncategorized');
+  const { user } = useUser();
   
-  const focusTrapRef = useFocusTrap();
-  const lowerCaseSubject = (editedFolder || 'Uncategorized').toLowerCase();
+  // Add the missing titleInputRef
+  const titleInputRef = useRef(null);
+  const editorRef = useRef(null);
+  const draftTimerRef = useRef(null);
+  
+  // Use refs to prevent state loss during re-renders
+  const titleRef = useRef(note.title);
+  const tagsRef = useRef(note.tags || []);
+  const folderRef = useRef(note.folder || 'Uncategorized');
 
-  const quoteIcon = <IconInfoCircle />;
+  // Local state that's completely isolated
+  const [localTitle, setLocalTitle] = useState(() => note.title);
+  const [localTags, setLocalTags] = useState(() => note.tags || []);
+  const [localFolder, setLocalFolder] = useState(() => note.folder || 'Uncategorized');
+  const [draftContent, setDraftContent] = useState(null);
+
+  // Only update when switching to a different note (not on re-renders)
+  const lastNoteIdRef = useRef(note.id);
   
-  // Format dates to be more readable
-  const formattedCreatedDate = dayjs(note.dateCreated).format('DD-MM-YYYY');
-  const formattedModifiedDate = dayjs(note.dateLastModified).format('DD-MM-YYYY');
+  useEffect(() => {
+    if (note.id !== lastNoteIdRef.current) {
+      // Switching to different note - update local state
+      setLocalTitle(note.title);
+      setLocalTags(note.tags || []);
+      setLocalFolder(note.folder || 'Uncategorized');
+      lastNoteIdRef.current = note.id;
+    }
+  }, [note.id]);
+
+  const focusTrapRef = useFocusTrap();
   
-  // Function to handle adding images through button click
-  const handleAddImage = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (event) => {
-      if (event.target.files?.length) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        
-        reader.onload = () => {
-          if (editor) {
-            // Create an actual image element and set its attributes
-            const img = document.createElement('img');
-            img.src = reader.result;
-            
-            // Let TipTap handle inserting the node with all its internal logic
-            editor.commands.insertContent({
-              type: 'image',
-              attrs: {
-                src: img.src,
-                alt: file.name || 'Image'
-              }
-            });
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
-  };
-  
-  // Helper function to handle image files
-  const handleImageFile = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (editor) {
-        editor.chain().focus().setImage({ src: e.target.result }).run();
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-  
-  // Initialize the rich text editor with Image extension and paste/drop handlers
-  const editor = useEditor({
+  // Memoize derived values to prevent recalculation on every render
+  const lowerCaseSubject = useMemo(() => (localFolder || 'Uncategorized').toLowerCase(), [localFolder]);
+  const formattedCreatedDate = useMemo(() => dayjs(note.dateCreated).format('DD-MM-YYYY'), [note.dateCreated]);
+  const formattedModifiedDate = useMemo(() => dayjs(note.dateLastModified).format('DD-MM-YYYY'), [note.dateLastModified]);
+  const sanitizedContent = useMemo(() => DOMPurify.sanitize(note.content), [note.content]);
+
+  // Memoize the editor configuration to prevent recreation on every render
+  const editorConfig = useMemo(() => ({
     extensions: [
       StarterKit,
       Underline,
@@ -110,209 +93,40 @@ const NoteView = ({
       SubScript,
       Highlight,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      Image, // This adds basic image support
+      Image,
     ],
     content: note.content,
     onUpdate: ({ editor }) => {
       // Optional debugging
       // console.log(editor.getHTML());
     },
-  });
+  }), [note.content]);
+
+  // Initialize the rich text editor with stable config
+  const editor = useEditor(editorConfig);
   
-  // Add this effect to update editor content when note changes or edit mode is entered
-  useEffect(() => {
-    if (editor && isEditing) {
-      // Force editor to load the current note content
-      editor.commands.setContent(note.content);
-    }
-  }, [editor, note.content, isEditing]);
-  
-  // Add paste handler for images
-  useEffect(() => {
-    if (!editor || !isEditing) return;
-    
-    const handlePaste = (event) => {
-      const items = event.clipboardData?.items;
-      if (!items) return;
-      
-      for (const item of items) {
-        if (item.type.indexOf('image') === 0) {
-          event.preventDefault();
-          const file = item.getAsFile();
-          if (file) handleImageFile(file);
-          break;
-        }
-      }
-    };
-    
-    // Add paste event listener to the editor element
-    const editorElement = editor.view.dom;
-    editorElement.addEventListener('paste', handlePaste);
-    
-    return () => {
-      editorElement.removeEventListener('paste', handlePaste);
-    };
-  }, [editor, isEditing]);
-  
-  // Add drag and drop handler for images
-  useEffect(() => {
-    if (!editor || !isEditing) return;
-    
-    const handleDrop = (event) => {
-      const items = event.dataTransfer?.items;
-      if (!items) return;
-      
-      for (const item of items) {
-        if (item.type.indexOf('image') === 0) {
-          event.preventDefault();
-          const file = item.getAsFile();
-          if (file) handleImageFile(file);
-          break;
-        }
-      }
-    };
-    
-    const handleDragOver = (event) => {
-      // This is needed to allow dropping
-      event.preventDefault();
-    };
-    
-    // Add drag and drop event listeners to the editor element
-    const editorElement = editor.view.dom;
-    editorElement.addEventListener('drop', handleDrop);
-    editorElement.addEventListener('dragover', handleDragOver);
-    
-    return () => {
-      editorElement.removeEventListener('drop', handleDrop);
-      editorElement.removeEventListener('dragover', handleDragOver);
-    };
-  }, [editor, isEditing]);
-
-  // Toggle edit mode or save depending on current state
-  const handleEditToggle = () => {
-    if (isEditing) {
-      // If already in edit mode, save the note
-      handleSave();
-    } else {
-      // If not in edit mode, enter edit mode
-      setEditedTitle(note.title);
-      setEditedTags(note.tags || []);
-      setEditedFolder(note.folder || 'Uncategorized');
-      startEditing();
-    }
-  };
-
-  // Sanitize HTML content for security
-  const sanitizedContent = DOMPurify.sanitize(note.content);
-
-  // Track draft content
-  const [draftContent, setDraftContent] = useState(null);
-  const draftTimerRef = useRef(null);
-
-  // Setup automatic draft saving
-  useEffect(() => {
-    if (isEditing && editor) {
-      // Initial setup - check for existing draft
-      const draftKey = `note_draft_${note.id}`;
-      const savedDraft = localStorage.getItem(draftKey);
-      
-      if (savedDraft) {
-        // Restore saved draft when editor initializes
-        try {
-          const draftData = JSON.parse(savedDraft);
-          if (draftData.content && draftData.timestamp) {
-            // Only restore if draft is not too old (e.g., 24 hours)
-            const draftAge = Date.now() - draftData.timestamp;
-            if (draftAge < 24 * 60 * 60 * 1000) {
-              // Set the editor content to the draft
-              editor.commands.setContent(draftData.content);
-              setDraftContent(draftData.content);
-              console.log('Restored draft from', new Date(draftData.timestamp));
-            } else {
-              // Draft too old, remove it
-              localStorage.removeItem(draftKey);
-            }
-          }
-        } catch (error) {
-          console.error('Error restoring draft:', error);
-          localStorage.removeItem(draftKey);
-        }
-      }
-
-      // Set up auto-saving draft
-      const saveDraft = () => {
-        if (editor) {
-          const currentContent = editor.getHTML();
-          if (currentContent !== note.content) {
-            // Only save if content has changed from original
-            const draftData = {
-              content: currentContent,
-              timestamp: Date.now(),
-              noteId: note.id
-            };
-            localStorage.setItem(draftKey, JSON.stringify(draftData));
-            setDraftContent(currentContent);
-            console.log('Draft saved at', new Date());
-          }
-        }
-      };
-
-      // Save draft every 5 seconds while editing
-      draftTimerRef.current = setInterval(saveDraft, 5000);
-
-      // Also save when editor content changes
-      const handleUpdate = () => {
-        // Clear any existing timer to avoid multiple rapid saves
-        if (draftTimerRef.current) {
-          clearInterval(draftTimerRef.current);
-        }
-        
-        // Set a new timer to save after a short delay (debounce)
-        draftTimerRef.current = setTimeout(saveDraft, 1000);
-      };
-
-      editor.on('update', handleUpdate);
-
-      return () => {
-        // Clean up timers when component unmounts or editor changes
-        if (draftTimerRef.current) {
-          clearInterval(draftTimerRef.current);
-        }
-        editor.off('update', handleUpdate);
-      };
-    }
-  }, [isEditing, editor, note.id, note.content]);
-
-  // Handle successful save - clear the draft
-  const handleSaveSuccess = useCallback(() => {
-    const draftKey = `note_draft_${note.id}`;
-    localStorage.removeItem(draftKey);
-    setDraftContent(null);
-    console.log('Draft cleared after successful save');
-  }, [note.id]);
-
-  // Modify your existing save function to clear draft on success
-  const handleSave = () => {
+  // First define handleSave and handleCancel
+  const handleSave = useCallback(() => {
     if (editor) {
       // Use "Uncategorized" as default if no folder is selected
-      const finalFolder = !editedFolder || editedFolder.trim() === '' ? 'Uncategorized' : editedFolder;
+      const finalFolder = !localFolder || localFolder.trim() === '' ? 'Uncategorized' : localFolder;
       
       // If title is empty, use "folder Notitie" as default (using the final folder)
-      const finalTitle = editedTitle.trim() === '' ? `${finalFolder} Notitie` : editedTitle;
+      const finalTitle = localTitle.trim() === '' ? `${finalFolder} Notitie` : localTitle;
       
       onSave({
         ...note,
         title: finalTitle,
         content: editor.getHTML(),
-        tags: editedTags,
+        tags: localTags,
         folder: finalFolder,
         dateLastModified: new Date().toISOString()
       });
     }
     stopEditing();
-  };
+  }, [editor, localFolder, localTitle, localTags, note, onSave, stopEditing]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     // Open confirmation modal
     modals.openConfirmModal({
       centered: true,
@@ -346,7 +160,6 @@ const NoteView = ({
         style: { fontWeight: 500 }
       },
       onCancel: () => {
-        // User wants to continue editing, do nothing
         notifications.show({
           title: 'Doorgaan met bewerken',
           message: 'U kunt verder gaan met het bewerken van de notitie',
@@ -355,11 +168,11 @@ const NoteView = ({
         });
       },
       onConfirm: () => {
-        // User confirmed cancellation, proceed with cancellation
         // Clear the draft
         const draftKey = `note_draft_${note.id}`;
         localStorage.removeItem(draftKey);
-        setDraftContent(null);
+        setLocalTags(note.tags || []);
+        setLocalFolder(note.folder || 'Uncategorized');
         
         // If editor is available, reset content to original note content
         if (editor) {
@@ -367,26 +180,18 @@ const NoteView = ({
         }
         
         // Reset edited fields to original values
-        const folder = note.folder || 'Uncategorized';
-        
-        // Check if the title is empty, if so set it to "Subject + Notitie"
         if (!note.title || note.title.trim() === '') {
-          setEditedTitle(`${folder} Notitie`);
+          setLocalTitle(`${note.folder} Notitie`);
           
-          // Also update the note title in the parent component
           onSave({
             ...note,
-            title: `${folder} Notitie`,
+            title: `${note.folder} Notitie`,
             dateLastModified: new Date().toISOString()
           });
         } else {
-          setEditedTitle(note.title);
+          setLocalTitle(note.title);
         }
         
-        setEditedTags(note.tags || []);
-        setEditedFolder(folder);
-        
-        // Exit edit mode
         stopEditing();
         
         notifications.show({
@@ -397,48 +202,162 @@ const NoteView = ({
         });
       },
     });
-  };
+  }, [editor, note, onSave, stopEditing]);
 
-  // Add this effect to update editedTags when note changes
-  useEffect(() => {
-    if (note?.tags) {
-      setEditedTags(note.tags);
+  const handleDelete = useCallback(() => {
+    onDelete(note.id);
+  }, [onDelete, note.id]);
+
+  // Now define handleEditToggle AFTER handleSave is defined
+  const handleEditToggle = useCallback(() => {
+    if (isEditing) {
+      handleSave();
+    } else {
+      setLocalTitle(note.title);
+      setLocalTags(note.tags || []);
+      setLocalFolder(note.folder || 'Uncategorized');
+      startEditing();
     }
-  }, [note]);
+  }, [isEditing, handleSave, note.title, note.tags, note.folder, startEditing]);
 
+  // Then define the image handlers that were defined earlier
+  const handleAddImage = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (event) => {
+      if (event.target.files?.length) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = () => {
+          if (editor) {
+            const img = document.createElement('img');
+            img.src = reader.result;
+            
+            editor.commands.insertContent({
+              type: 'image',
+              attrs: {
+                src: img.src,
+                alt: file.name || 'Image'
+              }
+            });
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  }, [editor]);
+
+  const handleImageFile = useCallback((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (editor) {
+        editor.chain().focus().setImage({ src: e.target.result }).run();
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [editor]);
+
+  // Update editor content only when necessary (not on every render)
   useEffect(() => {
-    // Update local state if the note prop changes
-    if (note) {
-      // Any necessary updates when note changes
-      console.log("Note updated in preview:", note.tags);
+    if (editor && isEditing && note.content !== editor.getHTML()) {
+      editor.commands.setContent(note.content);
     }
-  }, [note]); // Dependency on the note prop
-
-  // Update editedFolder when note changes
+  }, [editor, note.id, isEditing]); // Only depend on note.id, not entire note object
+  
+  // Stable paste handler
   useEffect(() => {
-    if (note) {
-      setEditedFolder(note.folder || 'Uncategorized');
-    }
-  }, [note]);
-
-  // Add or modify this useEffect to update editedTitle when note changes
+    if (!editor || !isEditing) return;
+    
+    const handlePaste = (event) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+      
+      for (const item of items) {
+        if (item.type.indexOf('image') === 0) {
+          event.preventDefault();
+          const file = item.getAsFile();
+          if (file) handleImageFile(file);
+          break;
+        }
+      }
+    };
+    
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('paste', handlePaste);
+    
+    return () => {
+      editorElement.removeEventListener('paste', handlePaste);
+    };
+  }, [editor, isEditing, handleImageFile]);
+  
+  // Stable drag and drop handler
   useEffect(() => {
-    // Update editedTitle whenever the note changes or edit mode is entered
-    if (note) {
-      setEditedTitle(note.title);
-    }
-  }, [note.id, note.title]); // Depend on note.id to detect when we switch to a different note
+    if (!editor || !isEditing) return;
+    
+    const handleDrop = (event) => {
+      const items = event.dataTransfer?.items;
+      if (!items) return;
+      
+      for (const item of items) {
+        if (item.type.indexOf('image') === 0) {
+          event.preventDefault();
+          const file = item.getAsFile();
+          if (file) handleImageFile(file);
+          break;
+        }
+      }
+    };
+    
+    const handleDragOver = (event) => {
+      event.preventDefault();
+    };
+    
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('drop', handleDrop);
+    editorElement.addEventListener('dragover', handleDragOver);
+    
+    return () => {
+      editorElement.removeEventListener('drop', handleDrop);
+      editorElement.removeEventListener('dragover', handleDragOver);
+    };
+  }, [editor, isEditing, handleImageFile]);
 
+  // Draft saving logic with stable dependencies
+  useEffect(() => {
+    if (isEditing && editor) {
+      const draftKey = `note_draft_${note.id}`;
+      const savedDraft = localStorage.getItem(draftKey);
+      
+      if (savedDraft) {
+        try {
+          const draftData = JSON.parse(savedDraft);
+          if (draftData.content && draftData.timestamp) {
+            const draftAge = Date.now() - draftData.timestamp;
+            if (draftAge < 24 * 60 * 60 * 1000) {
+              editor.commands.setContent(draftData.content);
+              console.log('Restored draft from', new Date(draftData.timestamp));
+            } else {
+              localStorage.removeItem(draftKey);
+            }
+          }
+        } catch (error) {
+          console.error('Error restoring draft:', error);
+          localStorage.removeItem(draftKey);
+        }
+      }
+    }
+  }, [editor, isEditing, note.id]); // Only depend on note.id, not entire note object
+
+  const quoteIcon = <IconInfoCircle />;
+  
   // Prepare subject data for the Select component
   const subjectOptions = user.subjects.map(subject => ({
     value: subject,
     label: subject
   }));
-
-  // Add a handler for delete button click
-  const handleDelete = () => {
-    onDelete(note.id);
-  };
 
   const containerRef = useRef(null);
   
@@ -470,7 +389,7 @@ const NoteView = ({
 
   // Add a UI indicator for draft status (optional)
   const renderDraftIndicator = () => {
-    if (isEditing && draftContent) {
+    if (isEditing && editor) {
       return (
         <Text size="xs" color="dimmed" style={{ marginTop: '8px', color: '#89939E' }}>
           Draft automatisch opgeslagen. Sla eerst je notitie op voordat je deze browser tab sluit.
@@ -479,6 +398,60 @@ const NoteView = ({
     }
     return null;
   };
+
+  // Handle successful save - clear the draft
+  const handleSaveSuccess = useCallback(() => {
+    const draftKey = `note_draft_${note.id}`;
+    localStorage.removeItem(draftKey);
+    console.log('Draft cleared after successful save');
+  }, [note.id]);
+
+  // Add this effect to update editedTags when note changes
+  useEffect(() => {
+    if (note?.tags) {
+      setLocalTags(note.tags);
+    }
+  }, [note.id, note.tags]); // Use note.id instead of entire note
+
+  useEffect(() => {
+    // Update local state if the note prop changes
+    if (note) {
+      // Any necessary updates when note changes
+      console.log("Note updated in preview:", note.tags);
+    }
+  }, [note]); // Dependency on the note prop
+
+  // Update editedFolder when note changes
+  useEffect(() => {
+    if (note) {
+      setLocalFolder(note.folder || 'Uncategorized');
+    }
+  }, [note.id, note.folder]); // Use note.id instead of entire note
+
+  // Add or modify this useEffect to update editedTitle when note changes
+  useEffect(() => {
+    // Update editedTitle whenever the note changes or edit mode is entered
+    if (note) {
+      setLocalTitle(note.title);
+    }
+  }, [note.id, note.title]); // Use note.id instead of entire note
+
+  // Stable event handlers
+  const handleTitleChange = useCallback((event) => {
+    const newTitle = event.currentTarget.value;
+    setLocalTitle(newTitle);
+    titleRef.current = newTitle;
+  }, []);
+
+  const handleTagsChange = useCallback((newTags) => {
+    setLocalTags(newTags);
+    tagsRef.current = newTags;
+  }, []);
+
+  const handleFolderChange = useCallback((newFolder) => {
+    setLocalFolder(newFolder || '');
+    folderRef.current = newFolder || '';
+  }, []);
 
   return (
     <div 
@@ -551,9 +524,9 @@ const NoteView = ({
                               Titel
                           </div>
                           <TextInput
-                              ref={focusTrapRef}
-                              value={editedTitle}
-                              onChange={(e) => setEditedTitle(e.target.value)}
+                              ref={titleInputRef}
+                              value={localTitle}
+                              onChange={handleTitleChange}
                               size="xl"
                               className="note-view-title-input"
                               style={{
@@ -565,20 +538,20 @@ const NoteView = ({
                           <div 
                               className="edit-mode-tags flex-row"
                               style={{
-                                  '--subject-color': subjectColors[(editedFolder || 'Uncategorized').toLowerCase()]
+                                  '--subject-color': subjectColors[(localFolder || 'Uncategorized').toLowerCase()]
                               }}
                           >
                               <div className="edit-mode-tags-label">
                                   Tags
                               </div>
                               <TagsInput
-                                  value={editedTags}
-                                  onChange={setEditedTags}
+                                  value={localTags}
+                                  onChange={handleTagsChange}
                                   placeholder="Voeg tags toe en druk op enter"
                                   clearable
                                   className="note-view-tags-input"
                                   style={{
-                                      '--tag-bg': subjectColorsPrimary[(editedFolder || 'Uncategorized').toLowerCase()],
+                                      '--tag-bg': subjectColorsPrimary[(localFolder || 'Uncategorized').toLowerCase()],
                                   }}
                               />
                           </div>
@@ -603,8 +576,8 @@ const NoteView = ({
                                   Vak
                               </div>
                               <Select
-                                  value={editedFolder || 'Uncategorized'}
-                                  onChange={setEditedFolder}
+                                  value={localFolder || 'Uncategorized'}
+                                  onChange={handleFolderChange}
                                   checkIconPosition="right"
                                   data={subjectOptions}
                                   clearable={false}
@@ -763,7 +736,17 @@ const NoteView = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if note ID changes or editing state changes
+  return (
+    prevProps.note.id === nextProps.note.id &&
+    prevProps.isEditing === nextProps.isEditing &&
+    prevProps.onSave === nextProps.onSave &&
+    prevProps.onDelete === nextProps.onDelete &&
+    prevProps.startEditing === nextProps.startEditing &&
+    prevProps.stopEditing === nextProps.stopEditing
+  );
+});
 
 NoteView.propTypes = {
   note: PropTypes.shape({
