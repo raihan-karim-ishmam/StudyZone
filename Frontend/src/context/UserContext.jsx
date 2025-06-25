@@ -13,7 +13,7 @@ export const UserProvider = ({ children }) => {
     school: null,
     educationLevel: null,
     grade: null,
-    subjects: ['Algemeen', 'Aardrijkskunde', 'Scheikunde', 'Wiskunde B', 'Biologie', 'Engels', 'Natuurkunde'],
+    subjects: ['Algemeen', 'Aardrijkskunde', 'Scheikunde', 'Wiskunde B', 'Biologie', 'Engels', 'Natuurkunde', 'Uncategorized'],
     profileImage: null
   });
 
@@ -53,6 +53,13 @@ export const UserProvider = ({ children }) => {
       subjects: [],
       profileImage: null
     });
+    
+    // Clear date selection on logout
+    try {
+      localStorage.removeItem('selectedTodoDate');
+    } catch (error) {
+      console.error('Error clearing date on logout:', error);
+    }
   };
 
   const value = {

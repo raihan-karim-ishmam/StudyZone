@@ -1,0 +1,117 @@
+@import '../../_variables.scss';
+
+.notepreview-container {
+  width: 325px;
+  height: 343px;
+  border-radius: 15px;
+  border: 3px solid $color-background-light;
+  align-items: center;
+  transition: border-color 0.2s ease-in-out;
+  
+  &:hover {
+    border-color: var(--subject-color);
+    
+    .notepreview-banner {
+      border-color: var(--subject-color);
+    }
+  }
+  
+  .notepreview-banner{
+    width: 299px;
+    height: 127px;
+    border-radius: 7.5px;
+    position: relative;
+    margin-top: 10px;
+    border: 2px solid $color-background-light;
+    transition: border-color 0.2s ease-in-out;
+    .notepreview-date-created{
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 13px;
+      font-weight: 400;
+      justify-content: center;
+      align-items: center;
+      background-color: $color-white;
+      height: 22px;
+      padding-left: 10px;
+      padding-right: 10px;
+      border-radius: 4px;
+      .notepreview-date-created-text{
+        font-size: 12px;
+        font-weight: 400;
+        color: $color-black;
+      }
+    }
+    .notepreview-banner-svg{
+      position: absolute;
+      top: -2px;
+      left: -2px;
+    }
+    .context-menu-trigger{
+      position: absolute;
+      top: 10px;
+      right: 11px;
+      cursor: pointer;
+      transition: opacity 0.4s ease-in-out;
+    }
+    .context-menu-trigger:hover{
+      opacity: 0.5;
+    }
+    .notepreview-icon{
+      background-color: $color-white;
+      width: 80px;
+      height: 80px;
+      border-radius: 18px;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.06);
+      position: absolute;
+      bottom: 0px;
+      left: 50%;
+      transform: translate(-50%, 50%);
+
+      .notepreview-icon-img{
+        width: 60px;
+        height: 60px;
+      }
+    }
+  }
+  .notepreview-content{
+    margin-top: 53px;
+    .notepreview-content-title{
+      font-size: 20px;
+      font-weight: 600;
+      color: $color-black;
+      text-align: center;
+      align-self: center;
+      width: 208px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .notepreview-content-description{
+      margin-top: 6px;
+      margin-bottom: 14px;
+      align-self: center;
+      font-size: 13px;
+      font-weight: 400;
+      color: $color-black;
+      width: 268px;
+      height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+    .notepreview-content-tags{
+      width: 268px;
+      overflow-x: scroll;
+      scrollbar-width: none;
+      gap: 7px;      
+      justify-content: center;
+    }
+  }
+}

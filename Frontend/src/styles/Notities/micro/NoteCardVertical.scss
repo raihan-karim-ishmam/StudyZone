@@ -1,0 +1,69 @@
+@use '../../_variables.scss' as *;
+
+.note-card-vertical {
+    width: 100%;
+    height: 77px;
+    min-height: 77px;
+    border-radius: 15px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    &:hover{
+        opacity: 0.6;
+    }
+    .note-card-vertical-icon {
+        margin-left: 7px;
+        width: 66px;
+        min-width: 66px;
+        height: 66px;
+        border-radius: 10px;
+        background-color: $color-white;
+        align-items: center;
+        justify-content: center;
+        .subject-icon {
+            width: 48px;
+            height: 48px;
+        }
+    }
+    .note-card-vertical-content {
+        width: 100%;
+        height: 66px;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: space-between;
+        background-color: $color-white;
+        margin-right: 7px;
+        .note-card-vertical-details {
+            margin-left: 15px;
+            .note-card-vertical-title {
+                font-size: 16px;
+                font-weight: 600;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 200px;
+            }
+            .note-card-vertical-folder {
+                font-size: 12px;
+                font-weight: 400;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 100%;
+            }
+        }
+        .note-card-vertical-date {
+            font-size: 14px;
+            font-weight: 400;
+            margin-right: 15px;
+            height: 25px;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-radius: 100px;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+}

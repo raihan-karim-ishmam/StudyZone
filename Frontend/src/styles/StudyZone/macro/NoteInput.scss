@@ -1,0 +1,79 @@
+@use '../../_variables.scss' as *; 
+
+.note-preview-container {
+    border: 2px solid $color-background-light;
+    box-sizing: border-box;
+    position: relative;
+    height: 70px;
+    width: 280px;
+    background-color: $color-white;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-items: center;
+
+    &:hover { 
+      border: 2px solid var(--subject-color);
+    }
+    .note-preview-content{
+      height: 64px;
+      align-items: center;
+      margin-left: 16px;
+      .note-preview-icon{
+        width: 42px;
+        height: 42px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 400px;
+        img{
+          width: 65%;
+          height: 65%;
+        }
+      }
+      .note-preview-text{
+        height: 70px;
+        margin-top: 30px;
+        margin-left: 12px;
+        .note-preview-title{
+          font-size: 14px;
+          font-weight: 500;
+          color: $color-black;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 160px;
+        }
+        .note-preview-folder{ 
+          margin-top: -2px;
+          font-size: 12px;
+          color: $color-gray;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 160px;
+        }
+      }
+    }
+
+    .remove-note {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;  
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: $color-white;
+      color: white;
+      display: flex;  
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      &:hover {
+        background-color: $color-background-light;
+      } 
+    }
+  }

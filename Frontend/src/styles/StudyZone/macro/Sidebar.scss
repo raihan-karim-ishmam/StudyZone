@@ -1,6 +1,13 @@
 @use '../../variables' as *;
 
-.mantine-Drawer-root {
+.sidebar-drawer {
+    font-family: 'Poppins', sans-serif;
+    .mantine-Drawer-inner{
+        overflow-x: hidden;
+    }
+    .mantine-Drawer-content{
+        overflow-x: hidden;
+    }
     .mantine-Drawer-body {
         height: 100%;
         background-color: $color-white;
@@ -9,18 +16,111 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        overflow-y: overlay; // Scrollbar overlays content
+        scrollbar-gutter: stable;
+        transform: translateX(4px); 
+        overflow-x: hidden;
+        // Custom scrollbar styling to make it float
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0);
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+        
+        &:hover {
+            &::-webkit-scrollbar-thumb {
+                background-color: rgba(0, 0, 0, 0.2);
+            }
+            &::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(0, 0, 0, 0.4);
+            }
+        }
+        .mantine-Accordion-content{
+            padding: 0 !important;
+        }
+        .chat-menu{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chat-icon{
+            margin-right: 12px;
+        }
+        .line{
+            position: absolute;
+            top: 0;
+            left: -10px;
+            width: 1px;
+            height: 60px;
+            background-color: $color-black;
+            .dot{
+                width: 4px;
+                height: 4px;
+                background-color: $color-black;
+                border-radius: 50%;
+                position: absolute;
+                top: 14px;
+                left: -1.5px;
+            }
+        }
+        .algemeen-accordion{
 
+        }
+        ul{
+            padding-top: 20px !important;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 293px;
+            align-items: flex-end;
+        }
+        li{
+            position: relative;
+            cursor: pointer;
+            border-bottom: 0px !important;
+            background-color: $color-white;
+            border-radius: 100px;
+            width: 256px;
+            height: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            padding-left: 10px !important;
+            padding-right: 16px !important;
+            transition: background-color 0.3s ease;
+            &:hover{
+                background-color: $color-background-light !important;
+            }
+        }
+        .new-chat-container{
+            gap: 8px;
+            font-size: 14px;
+            align-items: center;
+        }
+        // ONLY the accordion-container scrolls (subjects under "Folders")
+        .accordion-container {
+            flex: 1; // Take up remaining space
+            width: 100%;
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .folder-accordion{
+            margin-bottom: 32px;
+        }
         .mantine-Accordion-root{
             display: flex;
             flex-direction: column;
             gap: 26px;
-
         }
-        // .mantine-Accordion {
-        //     display: flex;
-        //     flex-direction: column;
-        //     gap: 26px;
-        // }
 
         .mantine-Accordion-item {
             width: 293px;
@@ -48,25 +148,32 @@
 
         .mantine-Accordion-chevron {
             border-radius: 19px;
-            background-color: $color-white;
-            transition: background-color 0.3s ease;
-            padding: 4px;
-
-            &:hover {
-                background-color: $color-background-light;
-            }
+            transition: background-color 0.3s ease, transform 0.2s ease;
         }
 
         .mantine-Accordion-item[data-active="true"] .mantine-Accordion-chevron {
             background-color: $color-background-light;
         }
 
+        .accordion-chevron {
+            width: 14px !important;
+            height: 14px !important;
+            transition: transform 0.2s ease !important;
+            
+            &[data-rotate] {
+                transform: rotate(180deg) !important;
+            }
+        }
+
         .drawer-header-container {
+            padding-left: 16px;
+            padding-right: 16px;
             margin-left: 1px;
             gap: 114px;
             align-items: center;
             padding-top: 28px;
             padding-bottom: 19px;
+            flex-shrink: 0;
             .drawer-header{
                 gap: 10px;
                 .drawer-header-title{
@@ -91,6 +198,7 @@
             gap: 10px;
             align-items: center;
             transition: opacity 0.3s ease;
+            flex-shrink: 0;
             .spotlight-search-icon{
                 margin-left: 17px;
             }
@@ -105,6 +213,153 @@
             width: 100%;
             height: 1px;
             background: linear-gradient(90deg, rgba(217, 217, 217, 0) 0%, #E3E5FF 50.5%, rgba(255, 255, 255, 0) 100%);
+            flex-shrink: 0;
         }
+        .accordion-label-1{
+            font-size: 14px;
+            font-weight: 500;
+            color: $color-black;
+            margin-bottom: 12px;
+            align-self: flex-start;
+            margin-left: 32px;
+        }
+        .accordion-label-2{
+            font-size: 14px;
+            font-weight: 500;
+            color: $color-black;
+            margin-bottom: 14px;
+            align-self: flex-start;
+            margin-left: 32px;
+            width: 256px;
+            height: 21.7px;
+            gap: 180.5px;
+            .accordion-label-2-icon{
+                cursor: pointer;
+                margin-left: 10px;
+                justify-content: center;
+                align-items: center;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                transition: scale 0.3s ease;
+                &:hover{
+                    scale: 1.2;
+                }
+            }
+            &:hover{
+                .accordion-label-2-icon{
+                    opacity: 1;
+                }
+            }
+        }
+        // Add styles for your labels
+        .accordion-label-1,
+        .accordion-label-2 {
+            flex-shrink: 0;
+            // Add your styling for these labels
+        }
+
     }
 }
+
+.mantine-Menu-dropdown {
+    background-color: $color-white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.06) !important;
+    width: 180px !important;
+  }
+  
+  .mantine-Menu-item {
+    transition: background-color 0.3s ease;
+  }
+  
+  .mantine-Menu-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+  }
+
+  .mantine-Menu-divider{
+    margin-left: 10px !important;
+    margin-right: 10px !important;
+  }
+
+  :where([data-mantine-color-scheme='light']) .m_efdf90cb{
+    border-color: $color-nav-border !important;
+  }
+
+  .delete-confirmation-modal-chat{
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    .mantine-Modal-content{
+        min-width: 390px !important;
+        min-height: 356px !important;
+        p{
+            margin-bottom: 40px !important;
+            max-width: 300px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        .delete-modal-chat-name {
+            display: inline-block;
+            vertical-align: top;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 140px;
+        }
+    }
+    .m_b6d8b162{
+        font-size: 16px;
+    }
+    .m_4081bf90.mantine-Group-root{
+        justify-content: center;
+        button{
+            border-radius: 100px;
+        }
+    }
+  }
+
+  .rename-chat-modal{
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    .mantine-Modal-content{
+        min-width: 390px !important;
+        min-height: 356px !important;
+        p{
+            margin-bottom: 40px !important;
+            max-width: 300px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        .delete-modal-chat-name {
+            display: inline-block;
+            vertical-align: top;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 140px;
+        }
+        .rename-chat-modal-input{
+            margin-bottom: 32px !important;
+        }
+        input{
+            margin-left: auto !important;
+            margin-right: auto !important;
+            border-radius: 100px;
+            width: 280px;
+            &:focus{
+                border-color: $color-gray;
+            }
+        }
+    }
+    .m_b6d8b162{
+        font-size: 16px;
+    }
+    .m_4081bf90.mantine-Group-root{
+        justify-content: center;
+        button{
+            border-radius: 100px;
+        }
+    }
+  }

@@ -1,0 +1,304 @@
+@use '../../_variables.scss' as *;  
+
+.chat-history {
+  align-self: center;
+  flex: 1;
+  width:48%;
+  min-width: 440px;
+  max-width: 770px;
+  overflow-y: visible;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding-top: 64px;
+  padding-bottom: 200px;
+  scrollbar-width: none;
+  .message {
+    display: flex;
+    gap: 12px;
+    max-width: 80%;
+    
+    &.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+      
+      .message-content {
+        background-color: $color-background-light;
+        color: var(--text-dark);
+        border-radius: 18px;
+        .message-text{
+          display: flex;
+          justify-content: flex-end;
+        }
+        .message-notes{
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          padding-block: 10px;
+          justify-content: flex-end;
+        }
+        
+        .message-images {
+          gap: 8px;
+          padding-top: 10px;
+          justify-content: flex-end;
+          .message-image {
+            .sent-image {
+              max-width: 100%;
+              max-height: 140px;
+              border-radius: 12px;
+              object-fit: contain;
+            }
+          }
+        }
+      }
+      
+      .user-avatar {
+        background-color: $color-primary-blue;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+    }
+    
+    &.assistant {
+      align-self: flex-start;
+      max-width: calc(100%) !important;
+      
+      .message-content {
+        background-color: $color-white;
+        color: $color-black;
+        border-radius: 18px;
+        padding: 0px 3px;
+      }
+      .message-avatar {
+        min-width: 32px;
+        height: 32px;
+        border-radius: 100px;
+        align-items: center;
+        justify-content: center;
+        .avatar-image {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      
+      &.loading {
+        .message-content {
+          padding: 6px 16px;
+        }
+      }
+    }
+    
+    .message-content {
+      padding: 6px 16px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+  }
+  
+  .typing-indicator {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    
+    span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: typing 1s infinite ease-in-out;
+      
+      &:nth-child(1) {
+        animation-delay: 0s;
+      }
+      
+      &:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      
+      &:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+    }
+  }
+}
+.cancel-width{
+  max-width: 100% !important;
+}
+
+.new-chat-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  margin-top: 34px;
+  font-family: "Poppins", sans-serif;
+  
+  .logo {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 24px;
+    border-radius: 14.4px;
+    box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.08);
+    .logo-image{
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
+  .new-chat-placeholder-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: $color-black;
+  }
+  
+  .new-chat-placeholder-description {
+    font-size: 16px;
+    color: $color-gray;
+    max-width: 400px;
+    margin-bottom: 24px;
+  }
+  
+  .notes-container {
+    width: 100%;
+    max-width: 600px;
+    gap: 12px;
+    align-items: center;
+    
+    .notes-header {
+      font-size: 16px;
+      color: $color-primary-orange;
+      margin-bottom: 12px;
+    }
+    
+    .notes-list {
+      gap: 12px;
+      justify-content: center;
+      max-width: 500px;
+      flex-wrap: wrap;
+      
+      .note-item {
+        gap: 6px;
+        border-radius: 800px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid #ECECEC;
+        padding-left: 18px;
+        padding-right: 18px;
+        height: 34px;
+        align-items: center;
+        justify-content: center;
+        &:hover {
+          background-color: #ECECEC;
+        }
+        
+        &.selected {
+          background-color: #ECECEC;
+        }
+        .note-icon {
+          width: 22px;
+          height: 22px;
+          img {
+            width: 100%;
+            height: 100%;
+          }
+        }
+        .note-title {
+          font-size: 14px;
+          max-width: 160px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+}
+
+@keyframes typing {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.message-text {
+  display: flex;
+  flex-direction: column;
+  p {
+    margin-block-start: 0em !important;
+    margin-block-end: 1em !important;
+  }
+} 
+
+pre {
+  width: 100%;
+  max-width: 100%;
+  white-space: pre-wrap;       /* CSS3 */
+  white-space: -moz-pre-wrap;  /* Firefox */
+  white-space: -pre-wrap;      /* Opera <7 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* IE */
+  overflow-x: auto;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.9em;
+  
+  code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    width: 100%;
+  }  
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: 1em;
+  font-weight: 600;
+  margin-block-start: 0em !important;
+  margin-block-end: 1em !important;
+}
+
+.typing-cursor {
+  display: inline-block;
+  width: 10px;
+  height: 20px;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animated-response {
+  min-height: 1em;
+  position: relative;
+  
+  /* Ensure we don't get jumps in layout */
+  &:empty::before {
+    content: '';
+    display: inline-block;
+    min-height: 1em;
+  }
+}

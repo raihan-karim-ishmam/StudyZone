@@ -1,0 +1,18 @@
+@use '../styles/_variables.scss' as *;
+
+.footer {
+    padding-bottom: 60px;
+    padding-top: 120px;
+    max-width: 1360px;
+    width: 100%;
+    justify-content: space-between;
+    color: $color-gray;
+    font-size: 14px;
+    .footer-links {
+        gap: 30px;
+        a {
+            color: $color-gray;
+            text-decoration: none;
+        }
+    }
+}

@@ -1,0 +1,45 @@
+@use '../../_variables.scss' as *;
+
+.filter-carousel-section {
+    width: 1360px;
+    height: 200px;
+}
+
+.m_39bc3463.mantine-Carousel-controls > :nth-child(2) {
+    background-color: $color-white;
+    width: 23px;
+    height: 62px;
+    border: none;
+    box-shadow: none;
+    opacity: 1;
+    min-height: 0;
+    min-width: 0;
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+}
+
+.m_39bc3463.mantine-Carousel-controls > :first-child {
+    background-color: $color-white;
+    width: 23px;
+    height: 62px;
+    border: none;
+    box-shadow: none;
+    opacity: 1;
+    min-height: 0;
+    min-width: 0;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+.mantine-Carousel-controls {
+   top: calc(50%);
+   transform: translateY(-50%);
+}
+
+.m_39bc3463:where([data-orientation='horizontal']) {
+    padding: 0;
+}
+
+.m_64f58e10 {
+    border-radius: 0;
+}

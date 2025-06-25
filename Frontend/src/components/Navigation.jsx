@@ -4,7 +4,7 @@ import { useUser } from '../context/UserContext';
 
 import '../styles/Navigation.scss';
 
-import logo from '../assets/image/navigation/logo.png';
+import logo from '../assets/image/global/logo.png';
 import defaultAvatar from '../assets/svg/navigation/default-avatar.svg';
 
 const Navigation = () => {

@@ -1,0 +1,183 @@
+@import '../variables.scss';
+
+.todo-page{
+    font-family: 'Poppins', sans-serif;
+    justify-content: center;
+    width: 70%;
+    justify-self: center;
+    .m_6fa5e2aa.m_8fb7ebe7.mantine-Input-input.mantine-DatePickerInput-input{
+        cursor: pointer;
+        border-radius: 100px;
+        width: 200px;
+        border: none;
+        text-indent: 2px;
+        font-size: 16px;
+        transition: 0.3s;
+        &:hover{
+            opacity: 0.6;
+        }
+    }
+    .header{
+        margin-top: 76px;
+        // margin-bottom: 14px;
+        height: 40px;
+        align-items: center;
+        gap: 21px;
+        // justify-content: center;
+        .header-left{
+            font-size: 32px;
+            font-weight: 600;
+        }
+        // .divider{
+        //     width: 3px;
+        //     height: 20px;
+        //     border-radius: 100px;
+        //     background-color: $color-black;
+        // }
+        // .header-right{
+        //     font-size: 28px;
+        // }
+    }
+    .todo-navigation{
+        margin-top: 10px;
+        justify-content: space-between;
+        font-size: 14px;
+        .arrows{
+            align-items: center;
+            img{
+                width: 16px;
+                height: 16px;
+            }
+            .date{
+                cursor: pointer;
+                height: 28px;
+                width: 100px;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid $color-background-light;
+                transition: background-color 0.3s;
+                font-weight: 500;
+                color: $color-gray;
+                &:hover{
+                    background-color: $color-background-light;
+                }
+            }
+            .arrow-left{
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                border: 1px solid $color-background-light;
+                border-radius: 2px;
+                border-right: none;
+                border-radius: 4px 0 0 4px;
+                transition: background-color 0.3s;
+                &:hover{
+                    background-color: $color-background-light;
+                }
+            }
+            .arrow-right{
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                border: 1px solid $color-background-light;
+                border-radius: 2px;
+                border-left: none;
+                border-radius: 0 4px 4px 0;
+                transition: background-color 0.3s;
+                &:hover{
+                    background-color: $color-background-light;
+                }
+            }
+        }
+    }
+    .todo-top-calendar{
+        margin-top: 14px;
+        width: 100%;
+        border-bottom: 1px solid $color-nav-border;
+        .todo-top-calendar-date{
+            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+            background-color: $color-white;
+            gap: 6px;
+            font-size: 14px;
+            width: 14.2857142857%;
+            height: 30px;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+            &:hover{
+                background-color: $color-background-light;
+            }
+            .todo-top-calendar-date-day{
+            }
+            .todo-top-calendar-date-number{
+                width: 21px;
+                height: 21px;
+                border-radius: 4px;
+                justify-content: center;
+                align-items: center;
+                font-size: 13px;
+            }
+        }
+    }
+    .todo-todos{
+        .todo-accordion{
+            width: 100%;
+            .mantine-Accordion-item{
+                border-bottom: 1px solid $color-nav-border;
+                width: 100%;
+                .m_4ba585b8{
+                    padding-inline: 0;
+                }
+                .mantine-Accordion-label{
+                    padding-top: 14px;
+                    padding-bottom: 14px;
+                }
+                .mantine-Accordion-control{
+                    transition: opacity 0.3s;
+                    &:hover{
+                        background-color: transparent;
+                        // opacity: 0.6;
+                    }
+                }
+                .mantine-Accordion-content{
+                    padding-top: 0;
+                }
+            }
+        }
+    }
+}
+.m_38a85659{
+    border-radius: 20px;
+}
+
+.mantine-Checkbox-input{
+    border-radius: 100px;
+}
+
+.mantine-focus-auto.mantine-active.m_8d3f4000.mantine-ActionIcon-root.m_87cf2631.mantine-UnstyledButton-root{
+    --ai-hover: transparent !important;
+    &:hover{
+        opacity: 0.6;
+    }
+}
+
+.mantine-Textarea-input{
+    &:focus{
+        border-color: $color-nav-border;
+    }
+}
+
+input{
+    &:focus{
+        border-color: $color-nav-border;
+    }
+}
+
+.m_38a85659{
+    border-radius: 6px !important;
+}

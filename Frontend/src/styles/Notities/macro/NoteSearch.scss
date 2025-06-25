@@ -1,0 +1,34 @@
+@use '../../_variables.scss' as *;
+
+.mantine-Spotlight-actions {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+  }
+  
+  .mantine-Spotlight-body {
+    max-height: 500px !important;
+  }
+  
+  .mantine-Spotlight-content{
+    border-radius: 10px !important;
+  }
+
+  .m_d49bb8ef:where([data-selected]){
+    background-color: $color-background-light !important;
+    color: $color-black !important;
+  }
+
+  .m_a6d9d78d{
+    color: $color-gray !important;
+  }
+
+  .m_d49bb8ef:hover{
+    background-color: $color-background-light !important;
+  }
+
+  .m_6c2a1345.mantine-Spotlight-actionLabel{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }

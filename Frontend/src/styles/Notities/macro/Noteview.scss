@@ -1,0 +1,311 @@
+@use '../../_variables.scss' as *;
+
+.note-view-container {
+  width: 100%;
+  height: 100%;
+  max-width: 1080px;
+  margin-top: 0px;
+  padding-left: 56px;
+  padding-right: 56px;
+  * {
+    max-width: 100%;
+  }
+  .note-view-header {
+    width: 100%;
+    .note-view-tags {
+        gap: 6px;
+        color: $color-black;
+        max-width: 500px;
+        overflow-x: scroll;
+        scrollbar-width: none;
+        margin-bottom: 10px;
+        }
+    .note-view-option-menu {
+        width: 100%;
+        margin-bottom: 30px;
+        margin-top: 30px;
+        gap: 18px;
+        justify-content: flex-end;
+        .note-view-option {
+            margin: 0;
+            width: 40px;
+            height: 40px;
+            background-color: $color-white;
+            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.08);
+            border-radius: 100px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            img {
+                width: 18px;
+                height: 18px;
+                transition: transform 0.2s ease;
+            }
+            &:hover {
+                img {
+                    transform: scale(1.1);
+                }
+            }
+        }
+    }
+    .note-view-title-section { 
+        width: 100%;
+        .note-view-title-container {
+            width: 100%;
+            .edit-mode-header {
+                width: 100%;
+                .edit-mode-title {
+                    width: 100%;
+                    border-bottom: 1px solid $color-nav-border;
+                    border-top: 1px solid $color-nav-border;
+                    height: 65px;
+                    align-items: center;
+                    .edit-mode-title-label {
+                        font-size: 14px;
+                        width: 200px;
+                    }
+                }
+            }
+            .edit-mode-details {
+                width: 100%;
+                border-bottom: 1px solid $color-nav-border;
+                .edit-mode-tags {
+                    align-items: center;
+                    .m_8fb7ebe7{
+                        border: none;
+                    }
+                    .edit-mode-tags-label {
+                        font-size: 14px;
+                        width: 183px;
+                    }
+                    
+                    .note-view-tags-input {
+                        width: 100%;
+                        margin-top: 14.5px;
+                        margin-bottom: 12.5px;
+                    }
+                }
+                .edit-mode-dateInfo {
+                    margin-bottom: 12.5px;
+                    .edit-mode-dateInfo-label {
+                        font-size: 14px;
+                        width: 170px;
+                    }
+                    .edit-mode-dateInfo-date {
+                        font-size: 14px;
+                        color: $color-gray;
+                    }
+                }
+                .edit-mode-folder {
+                    margin-top: 14px;
+                    margin-bottom: 14.5px;
+                    align-items: center;
+                    .m_8fb7ebe7{
+                        border: none;
+                    }
+                    .edit-mode-folder-label {
+                        font-size: 14px;
+                        width: 170px;
+                    }
+                    .edit-mode-folder-subject {
+                        font-size: 14px;
+                    }
+                }
+            }
+            .note-view-title-input {
+                .m_8fb7ebe7{
+                    font-family: 'poppins', sans-serif;
+                    border: none;
+                    padding: 0;
+                    font-size: 14px;
+                    font-weight: 600;
+                }
+            }
+            .note-view-title {
+                font-size: 42px;
+                font-weight: 600;
+                margin-bottom: 6px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: normal;
+                max-width: 1080px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+            } 
+        }
+        .note-view-dates {
+            color: $color-gray;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            .dot {
+                width: 3px;
+                height: 3px;
+                border-radius: 100px;
+                background-color: $color-gray;
+            }
+        }
+    }
+  }
+
+  .note-view-divider {
+    width: 100%;
+    height: .5px;
+    background-color: $color-gray;
+    margin-top: 22px;
+  }
+
+  .mantine-Blockquote-root{
+    margin-top: 80px !important;
+  }
+
+  .note-view-content {
+    min-height: 500px;
+    margin-top: 22px;
+  }
+}
+
+.m_4574a3c4:where([data-sticky]){
+    position: sticky;
+}
+:where([data-mantine-color-scheme='light']) .m_d6493fad :where(mark){
+    background-color: $color-nav-border;
+}
+
+.ProseMirror {
+  &:focus {
+    outline: none;
+  }
+  
+  &.drop-cursor {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(77, 171, 247, 0.1);
+      border: 2px dashed #4dabf7;
+      pointer-events: none;
+      border-radius: 4px;
+    }
+  }
+
+  // Styles for images in the editor
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+    border-radius: 4px;
+    
+    &.ProseMirror-selectednode {
+      outline: 2px solid #4dabf7;
+      outline-offset: 2px;
+    }
+  }
+}
+
+:where([data-mantine-color-scheme='light']) .m_44da308b{
+    background-color: var(--subject-color, #4dabf7) !important;
+}
+
+.m_8d3f4000.m_87cf2631[title="Add image"]{
+    background-color: $color-primary-orange !important;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+    &:hover {
+        opacity: 0.6;
+    }
+}
+
+:where([data-mantine-color-scheme='light']) .m_dd3f7539, :where([data-mantine-color-scheme='light']) .m_4574a3c4, :where([data-mantine-color-scheme='light']) .m_c2207da6{
+    border-color: $color-nav-border !important;
+}
+
+.ProseMirror img.ProseMirror-selectednode{
+    outline: 3px solid $color-nav-border !important;
+}
+
+/* Make sure images look good in the rendered view too */
+.note-view-content {
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+    border-radius: 4px;
+  }
+}
+
+.cancel-button {
+    background-color: $color-white !important;
+    border: 2px solid $color-primary-blue !important;
+    color: $color-primary-blue !important;
+    border-radius: 100px !important;
+    height: 30px !important;
+    transition: opacity 0.2s ease;
+    &:hover {
+        opacity: 0.6;
+    }
+}
+
+.save-button {
+    background-color: $color-primary-blue !important;
+    color: $color-white !important;
+    border-radius: 100px !important;
+    transition: opacity 0.2s ease;
+    height: 30px !important;
+    &:hover {
+        opacity: 0.6;
+    }
+}
+
+@keyframes dropdown-animation {
+    from {
+      opacity: 0;
+      transform: translateY(0px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .animated-dropdown {
+    animation: dropdown-animation 0.2s ease;
+    transform-origin: top left;
+  }
+
+  .note-view-option {
+    margin: 0;
+    width: 40px;
+    height: 40px;
+    background-color: $color-white;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.08);
+    border-radius: 100px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img {
+        width: 18px;
+        height: 18px;
+        transition: transform 0.2s ease;
+    }
+    &:hover {
+        img {
+            transform: scale(1.1);
+        }
+    }
+}
+/* Add this to ensure the parent container can expand properly */
+.noteview-container {
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto; /* Center the container */
+  }
